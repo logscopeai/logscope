@@ -6,7 +6,7 @@ feat(core): deliver milestone 1 client sdk with tooling, normalization, transpor
 
 ## Summary
 
-This PR completes EPIC-LSN-01 (Core Client and Ingestion) by delivering Milestone 1 behavior for `logscope`.
+This PR completes EPIC-LSN-01 (Core Client and Ingestion) by delivering Milestone 1 behavior for `@logscopeai/logscope`.
 
 The implementation now includes:
 
@@ -19,7 +19,7 @@ The implementation now includes:
 
 ### LSN-001 Bootstrap TypeScript SDK Tooling
 
-- Configured package exports for root and `logscope/pino` entrypoints.
+- Configured package exports for root and `@logscopeai/logscope/pino` entrypoints.
 - Added TypeScript compiler config and dist output layout.
 - Added Vitest configuration with coverage gate greater than 90%.
 - Added lockfile support (`package-lock.json`) and runnable scripts for build/test/format.

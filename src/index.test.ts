@@ -60,7 +60,7 @@ describe('root sdk entrypoint', () => {
     expect(() => client.info('safe message')).not.toThrow();
   });
 
-  it('publishes the package under the logscope name with the pino subpath export', () => {
+  it('publishes the package under the scoped package name with the pino subpath export', () => {
     const packageJson = JSON.parse(
       readFileSync(resolve(__dirname, '..', 'package.json'), 'utf8'),
     ) as {
@@ -68,7 +68,7 @@ describe('root sdk entrypoint', () => {
       exports: Record<string, unknown>;
     };
 
-    expect(packageJson.name).toBe('logscope');
+    expect(packageJson.name).toBe('@logscopeai/logscope');
     expect(packageJson.exports).toHaveProperty('./pino');
   });
 });

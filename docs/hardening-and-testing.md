@@ -1,6 +1,6 @@
 # Hardening and Test Matrix (Milestone 4)
 
-This document records how `logscope` satisfies Milestone 4 hardening goals and test coverage expectations from spec section 12.
+This document records how `@logscopeai/logscope` satisfies Milestone 4 hardening goals and test coverage expectations from spec section 12.
 
 ## Runtime hardening summary
 
@@ -68,7 +68,7 @@ npm link
 Then consume from another project with:
 
 ```bash
-npm link logscope
+npm link @logscopeai/logscope
 ```
 
 ## Known limitations and non-goals

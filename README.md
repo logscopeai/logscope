@@ -1,4 +1,4 @@
-# logscope
+# @logscopeai/logscope
 
 > ⚠️ **Pre-release Software**
 >
@@ -6,7 +6,7 @@
 > It is provided strictly for local testing, development, and proof-of-concept validation.
 > Breaking changes may occur in any minor or patch release.
 
-`logscope` is the official Node.js SDK for Logscope.
+`@logscopeai/logscope` is the official Node.js SDK for Logscope.
 
 It enables Node.js applications to capture logs, normalize them, enrich them with execution context, and send them asynchronously to the Logscope Ingestion API for downstream processing.
 
@@ -16,7 +16,7 @@ Logscope is currently in early development. This SDK is intended for proof-of-co
 
 ## Early Development Mode
 
-During early development phases, `logscope` is expected to be executed locally using:
+During early development phases, `@logscopeai/logscope` is expected to be executed locally using:
 
 ```
 npm link
@@ -27,7 +27,7 @@ This allows the SDK to be developed and tested inside a consuming service before
 The intended import pattern is:
 
 ```ts
-import { Logscope } from 'logscope';
+import { Logscope } from '@logscopeai/logscope';
 ```
 
 Compatibility with `npm link` is a design requirement.
@@ -63,13 +63,13 @@ Compatibility with `npm link` is a design requirement.
 ## Installation
 
 ```
-npm install logscope
+npm install @logscopeai/logscope
 ```
 
 Or during development:
 
 ```
-npm link logscope
+npm link @logscopeai/logscope
 ```
 
 ---
@@ -77,7 +77,7 @@ npm link logscope
 ## Basic Usage (Class API)
 
 ```ts
-import { Logscope } from 'logscope';
+import { Logscope } from '@logscopeai/logscope';
 
 const logscope = new Logscope({
   apiKey: process.env.LOGSCOPE_API_KEY!,
@@ -105,7 +105,7 @@ const logscope = new Logscope({
 Compatibility API (`createLogscopeClient`) remains available:
 
 ```ts
-import { createLogscopeClient } from 'logscope';
+import { createLogscopeClient } from '@logscopeai/logscope';
 
 const logscope = createLogscopeClient({
   apiKey: process.env.LOGSCOPE_API_KEY!,
@@ -157,14 +157,14 @@ All guard paths are fail-safe and never throw into user code.
 The root entrypoint also exports shared contracts and normalization utilities:
 
 ```ts
-import { Logscope, normalizeLog } from 'logscope';
+import { Logscope, normalizeLog } from '@logscopeai/logscope';
 import type {
   IngestionLogEntry,
   LogLevel,
   LogscopeClient,
   LogscopeConfig,
   LogscopeInitConfig,
-} from 'logscope';
+} from '@logscopeai/logscope';
 ```
 
 `normalizeLog` converts SDK log input into ingestion-safe entries using `{ source, level, timestamp, message, metadata? }`.
@@ -233,7 +233,7 @@ const logger = pino({
   transport: {
     targets: [
       {
-        target: 'logscope/pino',
+        target: '@logscopeai/logscope/pino',
         options: {
           apiKey: process.env.LOGSCOPE_API_KEY,
           endpoint: 'http://localhost:3000',
@@ -337,5 +337,5 @@ npm run build -- --watch
 2. In the consuming repository:
 
 ```
-npm link logscope
+npm link @logscopeai/logscope
 ```

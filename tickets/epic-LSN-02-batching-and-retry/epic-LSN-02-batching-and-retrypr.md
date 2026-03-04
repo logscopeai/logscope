@@ -6,7 +6,7 @@ feat(pipeline): deliver milestone 2 batching, retry handling, and enforced vites
 
 ## Summary
 
-This PR completes EPIC-LSN-02 (Batching and Retry Delivery) for `logscope` by delivering:
+This PR completes EPIC-LSN-02 (Batching and Retry Delivery) for `@logscopeai/logscope` by delivering:
 
 - In-memory batch queuing with max-50 boundaries and interval-based flush.
 - Deterministic delivery retry/backoff behavior aligned with ingestion response handling.

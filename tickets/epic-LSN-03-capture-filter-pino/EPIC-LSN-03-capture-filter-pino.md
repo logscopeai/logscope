@@ -18,4 +18,4 @@ Unify all log sources (manual API, console, and pino transport) through one pipe
 
 - Filtering occurs before enqueueing for all source types.
 - Console capture is opt-in and preserves original console behavior.
-- `logscope/pino` transport maps levels and forwards without stdout interception.
+- `@logscopeai/logscope/pino` transport maps levels and forwards without stdout interception.

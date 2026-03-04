@@ -6,7 +6,7 @@ This epic delivers Spec Milestone 1 (`logscope-spec.md` section 13): basic clien
 
 ## Goal
 
-Create the first runnable `logscope` implementation that can be linked locally, accept manual log calls, normalize logs, and send them to `/api/logs/ingest` without throwing into user code.
+Create the first runnable `@logscopeai/logscope` implementation that can be linked locally, accept manual log calls, normalize logs, and send them to `/api/logs/ingest` without throwing into user code.
 
 ## Included Tickets
 

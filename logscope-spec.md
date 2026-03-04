@@ -2,7 +2,7 @@
 
 ## 1. Document Purpose
 
-This document defines the functional and technical specification for `logscope`.
+This document defines the functional and technical specification for `@logscopeai/logscope`.
 
 This specification targets a Proof of Concept implementation intended to validate:
 
@@ -18,7 +18,7 @@ This is not a production-ready specification.
 
 ## 2. Package Definition
 
-Package name: `logscope`  
+Package name: `@logscopeai/logscope`  
 Distribution: npm  
 Runtime target: Node.js  
 Language: TypeScript
@@ -57,7 +57,7 @@ interface LogscopeClient {
 Initialization example:
 
 ```ts
-import { Logscope } from 'logscope';
+import { Logscope } from '@logscopeai/logscope';
 
 const logscope = new Logscope({
   apiKey: 'ls_live_xxx',
@@ -221,7 +221,7 @@ Original console behavior must be preserved.
 Path:
 
 ```
-logscope/pino
+@logscopeai/logscope/pino
 ```
 
 Responsibilities:
@@ -326,7 +326,7 @@ Required coverage areas:
 
 ## 15. Objective
 
-Deliver a functional, test-covered base implementation of `logscope` that:
+Deliver a functional, test-covered base implementation of `@logscopeai/logscope` that:
 
 - Respects the ingestion API contract
 - Supports local development via npm link

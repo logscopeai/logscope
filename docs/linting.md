@@ -1,4 +1,4 @@
-# Auto Linting for logscope
+# Auto Linting for @logscopeai/logscope
 
 This repository keeps formatting simple: Prettier is the single source of truth, with local scripts in `package.json`, Husky pre-commit integration, and a CI format gate in `.github/format-check.yml`.
 

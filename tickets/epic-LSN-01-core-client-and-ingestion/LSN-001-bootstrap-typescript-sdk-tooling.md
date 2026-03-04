@@ -12,11 +12,11 @@ Establish a working TypeScript package foundation that supports local developmen
 
 ### In Scope
 
-- Configure `package.json` for `logscope` package semantics and exports.
+- Configure `package.json` for `@logscopeai/logscope` package semantics and exports.
 - Add TypeScript compiler configuration and source/output layout.
 - Add Vitest baseline configuration and runnable test scripts.
 - Add lockfile support so `npm ci` works.
-- Ensure root and future `logscope/pino` subpath exports are defined.
+- Ensure root and future `@logscopeai/logscope/pino` subpath exports are defined.
 
 ### Out of Scope
 
@@ -27,7 +27,7 @@ Establish a working TypeScript package foundation that supports local developmen
 1. `npm ci` succeeds on a clean clone.
 2. `npm run build` compiles TypeScript output.
 3. `npm test` executes Vitest successfully.
-4. Package exports include `logscope` and `logscope/pino` entrypoints.
+4. Package exports include `@logscopeai/logscope` and `@logscopeai/logscope/pino` entrypoints.
 5. The package remains consumable via `npm link` from a separate local project.
 
 ## Implementation Notes

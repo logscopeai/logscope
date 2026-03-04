@@ -1,10 +1,10 @@
 # AGENTS
 
-Rules for contributors working on `logscope`.
+Rules for contributors working on `@logscopeai/logscope`.
 
 ## Context
 
-- Package: `logscope`
+- Package: `@logscopeai/logscope`
 - Runtime: Node.js
 - Language: TypeScript
 - Status: Early-stage POC

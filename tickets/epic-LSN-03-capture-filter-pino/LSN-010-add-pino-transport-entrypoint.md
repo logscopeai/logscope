@@ -2,7 +2,7 @@
 
 ## Context
 
-Spec section 9 requires a pino transport at `logscope/pino` that maps pino levels, applies filtering, and forwards to the same batching pipeline.
+Spec section 9 requires a pino transport at `@logscopeai/logscope/pino` that maps pino levels, applies filtering, and forwards to the same batching pipeline.
 
 ## Objective
 
@@ -12,7 +12,7 @@ Deliver a dedicated pino transport module compatible with pino transport configu
 
 ### In Scope
 
-- Expose transport subpath `logscope/pino`.
+- Expose transport subpath `@logscopeai/logscope/pino`.
 - Parse pino log payloads and map levels to SDK `LogLevel`.
 - Forward normalized logs through shared filter + batch + retry pipeline.
 - Keep pino behavior unchanged and avoid stdout interception.
@@ -24,7 +24,7 @@ Deliver a dedicated pino transport module compatible with pino transport configu
 
 ## Acceptance Criteria
 
-1. Transport module resolves from `logscope/pino` after build.
+1. Transport module resolves from `@logscopeai/logscope/pino` after build.
 2. Level mapping is correct for standard pino numeric levels.
 3. Parsed logs use the same ingestion schema and pipeline as manual/console logs.
 4. Invalid payloads are handled safely without process crashes.

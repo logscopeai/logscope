@@ -24,7 +24,7 @@ The implementation introduces:
 
 - Filtering now consistently happens before enqueueing for all supported ingestion paths.
 - `captureConsole` remains disabled by default and, when enabled, wraps only `console.log/info/warn/error` with explicit level mapping and preserved original output semantics.
-- `logscope/pino` now provides a functional transport module that:
+- `@logscopeai/logscope/pino` now provides a functional transport module that:
   - maps standard pino levels (`10/20/30/40/50/60`);
   - safely ignores invalid payloads;
   - forwards valid payloads to the same ingestion schema and pipeline used by the core client.
