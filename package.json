@@ -13,6 +13,10 @@
       "types": "./dist/pino.d.ts",
       "default": "./dist/pino.js"
     },
+    "./winston": {
+      "types": "./dist/winston.d.ts",
+      "default": "./dist/winston.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -45,13 +49,17 @@
     "url": "https://github.com/logscopeai/logscope/issues"
   },
   "homepage": "https://github.com/logscopeai/logscope#readme",
+  "dependencies": {
+    "winston-transport": "^4.9.0"
+  },
   "devDependencies": {
     "@types/node": "^22.10.2",
     "@vitest/coverage-v8": "^2.1.8",
     "lint-staged": "^15.4.3",
     "prettier": "^3.4.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "winston": "^3.19.0"
   },
   "lint-staged": {
     "*.{ts,js,tsx,jsx,html,css,scss,json,md}": "npx prettier --config .prettierrc --write"

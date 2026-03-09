@@ -11,6 +11,7 @@ type RecordValue = Record<string, unknown>;
 
 type ClientRequiredField = 'apiKey';
 type PinoRequiredField = 'apiKey' | 'endpoint' | 'source';
+type WinstonRequiredField = 'apiKey' | 'endpoint' | 'source';
 
 interface GuardResult {
   isValid: boolean;
@@ -34,6 +35,16 @@ export interface PinoOptionsGuardResult extends GuardResult {
   retryPolicy?: Partial<RetryPolicy>;
   logFilter?: LogFilterConfig;
   invalidFields: ReadonlyArray<PinoRequiredField>;
+}
+
+export interface WinstonOptionsGuardResult extends GuardResult {
+  apiKey: string;
+  endpoint: string;
+  source: string;
+  flushIntervalMs?: number;
+  retryPolicy?: Partial<RetryPolicy>;
+  logFilter?: LogFilterConfig;
+  invalidFields: ReadonlyArray<WinstonRequiredField>;
 }
 
 const isRecord = (value: unknown): value is RecordValue => {
@@ -120,6 +131,14 @@ export const buildInvalidPinoOptionsWarning = (
   )}.`;
 };
 
+export const buildInvalidWinstonOptionsWarning = (
+  invalidFields: ReadonlyArray<WinstonRequiredField>,
+): string => {
+  return `[logscope] Invalid winston transport configuration. SDK fallback mode enabled. Missing or invalid required field(s): ${invalidFields.join(
+    ', ',
+  )}.`;
+};
+
 export const guardLogscopeClientConfig = (config: unknown): ClientConfigGuardResult => {
   const apiKey = safeGetProperty(config, 'apiKey');
   const ingestionBaseUrlCandidate = safeGetProperty(config, 'ingestionBaseUrl');
@@ -164,6 +183,40 @@ export const guardPinoTransportOptions = (options: unknown): PinoOptionsGuardRes
   const logFilter = normalizeLogFilter(safeGetProperty(options, 'logFilter'));
 
   const invalidFields: PinoRequiredField[] = [];
+
+  if (!isNonEmptyString(apiKey)) {
+    invalidFields.push('apiKey');
+  }
+
+  if (!isNonEmptyString(endpoint)) {
+    invalidFields.push('endpoint');
+  }
+
+  if (!isNonEmptyString(source)) {
+    invalidFields.push('source');
+  }
+
+  return {
+    isValid: invalidFields.length === 0,
+    apiKey: isNonEmptyString(apiKey) ? apiKey : '',
+    endpoint: isNonEmptyString(endpoint) ? endpoint : '',
+    source: isNonEmptyString(source) ? source : SAFE_FALLBACK_SOURCE,
+    flushIntervalMs: typeof flushIntervalMsValue === 'number' ? flushIntervalMsValue : undefined,
+    retryPolicy: normalizeRetryPolicy(retryPolicyValue),
+    logFilter,
+    invalidFields,
+  };
+};
+
+export const guardWinstonTransportOptions = (options: unknown): WinstonOptionsGuardResult => {
+  const apiKey = safeGetProperty(options, 'apiKey');
+  const endpoint = safeGetProperty(options, 'endpoint');
+  const source = safeGetProperty(options, 'source');
+  const flushIntervalMsValue = safeGetProperty(options, 'flushIntervalMs');
+  const retryPolicyValue = safeGetProperty(options, 'retryPolicy');
+  const logFilter = normalizeLogFilter(safeGetProperty(options, 'logFilter'));
+
+  const invalidFields: WinstonRequiredField[] = [];
 
   if (!isNonEmptyString(apiKey)) {
     invalidFields.push('apiKey');

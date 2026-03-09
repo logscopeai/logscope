@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   buildInvalidClientConfigWarning,
   buildInvalidPinoOptionsWarning,
+  buildInvalidWinstonOptionsWarning,
   guardLogscopeClientConfig,
   guardPinoTransportOptions,
+  guardWinstonTransportOptions,
 } from './config-guards';
 import { DEFAULT_FLUSH_INTERVAL_MS, DEFAULT_MAX_BATCH_SIZE } from './runtime-config';
 import { DEFAULT_RETRY_POLICY } from '../retry/retry-policy';
@@ -241,16 +243,68 @@ describe('guardPinoTransportOptions', () => {
   });
 });
 
+describe('guardWinstonTransportOptions', () => {
+  it('returns a valid guarded options object for complete input', () => {
+    const result = guardWinstonTransportOptions({
+      apiKey: 'api-key',
+      endpoint: 'http://localhost:3000',
+      source: 'billing-api',
+      flushIntervalMs: 50,
+      retryPolicy: {
+        maxRetries: 1,
+      },
+      logFilter: {
+        levels: ['info'],
+      },
+    });
+
+    expect(result).toEqual({
+      isValid: true,
+      apiKey: 'api-key',
+      endpoint: 'http://localhost:3000',
+      source: 'billing-api',
+      flushIntervalMs: 50,
+      retryPolicy: {
+        maxRetries: 1,
+      },
+      logFilter: {
+        levels: ['info'],
+      },
+      invalidFields: [],
+    });
+  });
+
+  it('falls back safely and reports invalid required fields', () => {
+    const result = guardWinstonTransportOptions({
+      apiKey: '',
+      endpoint: '',
+      source: null,
+      retryPolicy: 'invalid',
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.apiKey).toBe('');
+    expect(result.endpoint).toBe('');
+    expect(result.source).toBe('unknown');
+    expect(result.retryPolicy).toBeUndefined();
+    expect(result.invalidFields).toEqual(['apiKey', 'endpoint', 'source']);
+  });
+});
+
 describe('config warning builders', () => {
   it('produces warning messages using only field names', () => {
     const clientWarning = buildInvalidClientConfigWarning(['apiKey']);
     const pinoWarning = buildInvalidPinoOptionsWarning(['apiKey', 'source']);
+    const winstonWarning = buildInvalidWinstonOptionsWarning(['apiKey', 'source']);
 
     expect(clientWarning).toContain('[logscope]');
     expect(pinoWarning).toContain('[logscope]');
+    expect(winstonWarning).toContain('[logscope]');
     expect(clientWarning).toContain('apiKey');
     expect(pinoWarning).toContain('apiKey, source');
+    expect(winstonWarning).toContain('apiKey, source');
     expect(clientWarning).not.toContain('super-secret-key');
     expect(pinoWarning).not.toContain('super-secret-key');
+    expect(winstonWarning).not.toContain('super-secret-key');
   });
 });

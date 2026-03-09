@@ -198,6 +198,7 @@ Filtering applies to:
 - console logs
 - manual API logs
 - pino transport logs
+- winston transport logs
 
 ---
 
@@ -216,7 +217,9 @@ Original console behavior must be preserved.
 
 ---
 
-## 9. Pino Transport
+## 9. Logger Transports
+
+### Pino Transport
 
 Path:
 
@@ -235,6 +238,27 @@ Must not:
 
 - Intercept stdout
 - Modify pino behavior
+- Degrade performance significantly
+
+### Winston Transport
+
+Path:
+
+```
+@logscopeai/logscope/winston
+```
+
+Responsibilities:
+
+- Receive structured winston `info` objects
+- Map default npm winston levels to LogLevel
+- Apply filtering
+- Forward to same batching pipeline
+
+Must not:
+
+- Patch winston globally
+- Modify winston behavior
 - Degrade performance significantly
 
 ---
@@ -279,6 +303,7 @@ Required coverage areas:
 - Retry logic
 - Console interception
 - Pino transport mapping
+- Winston transport mapping
 - Ingestion request builder
 
 ---
@@ -304,6 +329,7 @@ Required coverage areas:
 - Console interception
 - Filtering
 - Pino transport
+- Winston transport
 
 ### Milestone 4
 
@@ -331,7 +357,7 @@ Deliver a functional, test-covered base implementation of `@logscopeai/logscope`
 - Respects the ingestion API contract
 - Supports local development via npm link
 - Enables filtering
-- Supports pino via transport
+- Supports pino and winston via transport
 - Is architecturally extensible
 
 This specification defines the baseline for development stories and task planning.

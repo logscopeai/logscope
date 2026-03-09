@@ -36,8 +36,9 @@ x-api-key: <LOGSCOPE_API_KEY>
 | Retry logic and status handling       | `src/retry/backoff.test.ts`, `src/retry/retry-policy.test.ts`, `src/pipeline/delivery-runner.test.ts`, `src/transport/send-ingestion-request.test.ts` |
 | Console interception                  | `src/console/capture-console.test.ts`, `src/client/create-logscope-client.test.ts`                                                                    |
 | Pino level mapping and transport flow | `src/pino/map-pino-level.test.ts`, `src/pino/transport.test.ts`, `src/pino.test.ts`                                                                   |
+| Winston level mapping and transport flow | `src/winston/map-winston-level.test.ts`, `src/winston/transport.test.ts`, `src/winston.test.ts`                                                     |
 | Ingestion request builder             | `src/transport/send-ingestion-request.test.ts`                                                                                                        |
-| Validation guards and safe fallbacks  | `src/config/config-guards.test.ts`, `src/client/create-logscope-client.test.ts`, `src/pino/transport.test.ts`                                         |
+| Validation guards and safe fallbacks  | `src/config/config-guards.test.ts`, `src/client/create-logscope-client.test.ts`, `src/pino/transport.test.ts`, `src/winston/transport.test.ts`        |
 
 ## Local verification workflow (clean checkout)
 

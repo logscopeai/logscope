@@ -40,6 +40,7 @@ Compatibility with `npm link` is a design requirement.
   - `console.log`, `console.info`, `console.warn`, `console.error` (opt-in)
   - Manual SDK logging API
   - Pino (via explicit transport)
+  - Winston (via explicit transport)
 
 - Normalizes logs to the Logscope ingestion contract
 - Applies optional client-side filtering
@@ -137,6 +138,7 @@ Runtime guards are applied before delivery:
 - Required config fields are validated:
   - Client: `apiKey`
   - Pino transport: `apiKey`, `endpoint`, `source`
+  - Winston transport: `apiKey`, `endpoint`, `source`
 - Invalid required config triggers a single safe warning and switches to a no-op fallback pipeline.
 - Warning diagnostics never include secret values such as API keys.
 - `ingestionBaseUrl` is optional in SDK client config. Missing or invalid values fallback to the production default.
@@ -246,6 +248,36 @@ const logger = pino({
 ```
 
 The transport maps standard pino levels (`10/20/30/40/50/60`) to Logscope levels (`trace/debug/info/warn/error/fatal`), applies `logFilter.levels` before enqueueing, and sends through the same batch/retry pipeline.
+
+---
+
+## Using Logscope with Winston
+
+Logscope does not patch Winston automatically.
+
+Instead, it provides an explicit transport:
+
+```ts
+import { createLogger, format } from 'winston';
+import { createWinstonTransport } from '@logscopeai/logscope/winston';
+
+const logger = createLogger({
+  level: 'info',
+  format: format.combine(format.timestamp()),
+  transports: [
+    createWinstonTransport({
+      apiKey: process.env.LOGSCOPE_API_KEY!,
+      endpoint: 'http://localhost:3000',
+      source: 'billing-api',
+      logFilter: {
+        levels: ['warn', 'error'],
+      },
+    }),
+  ],
+});
+```
+
+The Winston transport maps default npm levels (`error/warn/info/http/verbose/debug/silly`) to Logscope levels (`error/warn/info/info/debug/debug/trace`), applies `logFilter.levels` before enqueueing, and forwards through the same batch/retry pipeline.
 
 ---
 
