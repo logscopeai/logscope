@@ -1,6 +1,6 @@
 {
   "name": "@logscopeai/logscope",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.3",
   "description": "`@logscopeai/logscope` is the official Node.js client SDK for Logscope.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
