@@ -28,6 +28,8 @@ The authoritative behavioral reference is `logscope-spec.md`.
 10. Follow `.github/commit-message-instructions.md` when committing.
 11. When finished working on an epic, make sure to create a new markdown file in the corresponding directory in `tickets/<<epic-name>>/<<epic-name>>_pr.md` with a suggested PR description and title, both description and title should be descriptive, verbose and accurately reflect the changes made in the epic. This rule does not apply to the tech debt epic (if such epic exists).
 12. When finished working on a ticket from the dir `tickets/` make sure to update the status of the ticket in the `tickets/ticket_registry.md` file and the ticket itself (checklist, status, comments, etc.).
+13. For large features, SDK-surface changes, contract changes, or major maturity/status changes, also review the root workspace docs in `/home/ubuntu/Documents/logscope-project` and update them if needed.
+14. In substantial-work handoffs, explicitly state whether the root workspace docs were reviewed and whether updates were made or were not needed.
 
 ---
 
