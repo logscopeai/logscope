@@ -16,8 +16,7 @@ import { createLogMethods } from './log-methods';
 
 const UNAUTHORIZED_WARNING_MESSAGE =
   '[logscope] Received unauthorized response (401). Check SDK API key configuration.';
-const RETRY_EXHAUSTED_WARNING_MESSAGE =
-  '[logscope] Dropping log batch after max retry attempts.';
+const RETRY_EXHAUSTED_WARNING_MESSAGE = '[logscope] Dropping log batch after max retry attempts.';
 
 interface CreatePipelineInput {
   ingestionBaseUrl: string;
