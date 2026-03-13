@@ -1,5 +1,8 @@
 import TransportStream from 'winston-transport';
-import { buildInvalidWinstonOptionsWarning, guardWinstonTransportOptions } from '../config/config-guards';
+import {
+  buildInvalidWinstonOptionsWarning,
+  guardWinstonTransportOptions,
+} from '../config/config-guards';
 import type { RetryPolicy } from '../retry/retry-policy';
 import {
   createBatchingPipeline,
@@ -131,7 +134,10 @@ class LogscopeWinstonTransportStream extends TransportStream {
     let hasWarnedRetryExhausted = false;
 
     if (!guardedOptions.isValid) {
-      runSafeWarn(dependencies.warn, buildInvalidWinstonOptionsWarning(guardedOptions.invalidFields));
+      runSafeWarn(
+        dependencies.warn,
+        buildInvalidWinstonOptionsWarning(guardedOptions.invalidFields),
+      );
     }
 
     const createPipeline = dependencies.createPipeline ?? createBatchingPipeline;
