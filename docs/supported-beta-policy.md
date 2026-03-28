@@ -34,6 +34,8 @@ The following areas require compatibility review before they change:
 - Integration behavior that other repos or customer code can reasonably depend on, especially pino
   and winston transport behavior.
 
+The per-surface compatibility baseline is documented in `docs/compatibility-contract.md`.
+
 ## Deprecation policy
 
 When a documented public field, alias, export, or behavior needs to change, maintainers should use

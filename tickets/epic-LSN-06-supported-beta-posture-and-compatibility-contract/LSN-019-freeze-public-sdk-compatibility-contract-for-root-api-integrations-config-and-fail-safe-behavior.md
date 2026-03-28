@@ -38,15 +38,19 @@ other repos.
 
 ## Status
 
-Backlog
+Implemented
 
 ## Checklist
 
-- [ ] Document root API compatibility expectations.
-- [ ] Document integration/config compatibility expectations.
-- [ ] Keep fail-safe guarantees explicit.
-- [ ] Distinguish public contract from internal implementation detail.
+- [x] Document root API compatibility expectations.
+- [x] Document integration/config compatibility expectations.
+- [x] Keep fail-safe guarantees explicit.
+- [x] Distinguish public contract from internal implementation detail.
 
 ## Comments
 
-- Planning ticket only.
+- Completed on 2026-03-27.
+- Added `docs/compatibility-contract.md` to freeze the supported-beta compatibility baseline for
+  the root API, transport subpaths, config, and fail-safe delivery behavior.
+- Distinguished documented customer-facing contract from internal helpers, implementation details,
+  and transitive exports that are intentionally outside the supported-beta promise.

@@ -19,7 +19,8 @@ Logscope without throwing into user code.
   - users should still pin versions deliberately and validate upgrades.
 - Public behavior that is documented for consumers is treated as compatibility-sensitive.
 
-See `docs/supported-beta-policy.md` for the support, compatibility, and deprecation policy.
+See `docs/supported-beta-policy.md` for the support and deprecation policy, and
+`docs/compatibility-contract.md` for the supported-beta compatibility baseline.
 
 ## What This Package Does
 
@@ -327,5 +328,6 @@ Unit tests are co-located with the files they validate and coverage is enforced 
 ## Additional Documentation
 
 - Support and deprecation policy: `docs/supported-beta-policy.md`
+- SDK compatibility contract: `docs/compatibility-contract.md`
 - Hardening and coverage matrix: `docs/hardening-and-testing.md`
 - Formatting and lint workflow: `docs/linting.md`
