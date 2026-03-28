@@ -49,7 +49,8 @@ See `docs/supported-beta-policy.md` for the support and deprecation policy, and
 npm install @logscopeai/logscope
 ```
 
-For workspace development and local package iteration, `npm link` remains supported.
+For workspace development and local package iteration, `npm link` remains supported. See
+`docs/local-development.md` for the canonical SDK-side local link and endpoint guidance.
 
 ## Quick Start (`Logscope`)
 
@@ -329,5 +330,6 @@ Unit tests are co-located with the files they validate and coverage is enforced 
 
 - Support and deprecation policy: `docs/supported-beta-policy.md`
 - SDK compatibility contract: `docs/compatibility-contract.md`
+- Local development and `npm link` guidance: `docs/local-development.md`
 - Hardening and coverage matrix: `docs/hardening-and-testing.md`
 - Formatting and lint workflow: `docs/linting.md`

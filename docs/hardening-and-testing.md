@@ -73,6 +73,8 @@ Then consume from another project with:
 npm link @logscopeai/logscope
 ```
 
+See `docs/local-development.md` for the canonical SDK-side local endpoint and ownership boundary.
+
 ## Known limitations and non-goals
 
 - Supported beta, not GA.
