@@ -59,6 +59,8 @@ Coverage thresholds are enforced in `vitest.config.ts`:
 - functions: `91`
 - branches: `91`
 
+For the broader supported-beta release checklist, see `docs/release-verification.md`.
+
 ## Local development (`npm link`)
 
 Local-link workflow remains supported:

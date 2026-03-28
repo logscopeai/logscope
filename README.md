@@ -331,5 +331,6 @@ Unit tests are co-located with the files they validate and coverage is enforced 
 - Support and deprecation policy: `docs/supported-beta-policy.md`
 - SDK compatibility contract: `docs/compatibility-contract.md`
 - Local development and `npm link` guidance: `docs/local-development.md`
+- Release verification checklist: `docs/release-verification.md`
 - Hardening and coverage matrix: `docs/hardening-and-testing.md`
 - Formatting and lint workflow: `docs/linting.md`
