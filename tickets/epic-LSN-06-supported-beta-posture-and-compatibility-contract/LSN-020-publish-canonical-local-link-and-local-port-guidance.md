@@ -37,15 +37,19 @@ Publish the canonical SDK-side local linking and local endpoint guidance for the
 
 ## Status
 
-Backlog
+Implemented
 
 ## Checklist
 
-- [ ] Document canonical local linking flow.
-- [ ] Align endpoint/port guidance with workspace reality.
-- [ ] Remove stale legacy references.
-- [ ] Clarify ownership boundaries for local guidance.
+- [x] Document canonical local linking flow.
+- [x] Align endpoint/port guidance with workspace reality.
+- [x] Remove stale legacy references.
+- [x] Clarify ownership boundaries for local guidance.
 
 ## Comments
 
-- Planning ticket only.
+- Completed on 2026-03-27.
+- Added `docs/local-development.md` with the canonical SDK-side `npm link` flow, local ingestion
+  target, and ownership boundary for local topology guidance.
+- README and hardening docs now point to the local guide and explicitly treat repo-local defaults in
+  other tooling as non-canonical for the SDK contract.

@@ -37,15 +37,19 @@ Define the supported-beta support, compatibility, and deprecation policy for `@l
 
 ## Status
 
-Backlog
+Implemented
 
 ## Checklist
 
-- [ ] Document supported-beta posture and customer expectations.
-- [ ] Identify compatibility-sensitive public SDK behavior.
-- [ ] Define deprecation expectations for surface changes.
-- [ ] Align wording with Core and Ingestion maturity docs.
+- [x] Document supported-beta posture and customer expectations.
+- [x] Identify compatibility-sensitive public SDK behavior.
+- [x] Define deprecation expectations for surface changes.
+- [x] Align wording with Core and Ingestion maturity docs.
 
 ## Comments
 
-- Planning ticket only.
+- Completed on 2026-03-27.
+- Added `docs/supported-beta-policy.md` to define the SDK's supported-beta posture, compatibility
+  review boundary, and default deprecation policy.
+- Policy wording now matches the wider workspace use of `supported beta`, fail-safe guarantees, and
+  deliberate compatibility review.

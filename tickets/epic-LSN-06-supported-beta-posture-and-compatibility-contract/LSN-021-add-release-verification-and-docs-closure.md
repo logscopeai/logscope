@@ -36,15 +36,23 @@ Close the SDK maturity epic with synchronized docs and release verification step
 
 ## Status
 
-Backlog
+Implemented
 
 ## Checklist
 
-- [ ] Sync final supported-beta docs and compatibility notes.
-- [ ] Document release verification steps.
-- [ ] Review root workspace docs for maturity/status changes.
-- [ ] Record remaining limits or follow-ups.
+- [x] Sync final supported-beta docs and compatibility notes.
+- [x] Document release verification steps.
+- [x] Review root workspace docs for maturity/status changes.
+- [x] Record remaining limits or follow-ups.
 
 ## Comments
 
-- Planning ticket only.
+- Completed on 2026-03-27.
+- Added `docs/release-verification.md` and the epic PR draft to close supported-beta docs and
+  release guidance.
+- Reviewed root workspace docs and updated `project-docs/current-state.md`,
+  `project-docs/roadmap.md`, `context.md`, and `integration-annotations.md` where the SDK posture
+  and local-guidance wording had drifted.
+- Validation completed with `npm run format`, `npm test`, and `npm run build`.
+- Remaining follow-up stays outside this repo: payload-generator/local-default cleanup and broader
+  cross-repo endpoint consistency.

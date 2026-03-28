@@ -1,86 +1,58 @@
 # @logscopeai/logscope
 
-> Supported beta
+> Supported beta for the Logscope ingestion SDK.
 >
-> `@logscopeai/logscope` is the supported Node.js SDK for the current Logscope release-stage
-> onboarding path. Treat version changes deliberately before production rollouts; this is not yet
-> presented as a GA stability promise.
+> `@logscopeai/logscope` is the official Node.js SDK for sending application logs to the Logscope
+> Ingestion API. The package is pre-GA, but its documented public behavior is treated as
+> compatibility-sensitive and is maintained with a conservative, fail-safe posture.
 
-`@logscopeai/logscope` is the official Node.js SDK for Logscope.
+`@logscopeai/logscope` lets Node.js applications capture logs, normalize them to the ingestion
+schema, apply optional client-side filtering, batch delivery asynchronously, and forward logs to
+Logscope without throwing into user code.
 
-It enables Node.js applications to capture logs, normalize them, enrich them with execution context, and send them asynchronously to the Logscope Ingestion API for downstream processing.
+## Supported Beta Posture
 
-For the full customer onboarding order, start with Logscope Core:
+- Supported beta means the SDK is intended for real integrations, not only disposable local demos.
+- Supported beta does not mean GA:
+  - internal implementation may still evolve;
+  - future beta releases may add or refine surface area;
+  - users should still pin versions deliberately and validate upgrades.
+- Public behavior that is documented for consumers is treated as compatibility-sensitive.
 
-- `/docs/first-value-journey`
-- `logscope-core-web-app/docs/customer-onboarding-guide.md`
-
-This README owns package/runtime specifics only.
-
----
-
-## Local Development and Linked Workspace Mode
-
-For local workspace development, `@logscopeai/logscope` is expected to be executed locally using:
-
-```
-npm link
-```
-
-This allows the SDK to be developed and tested inside a consuming service before being published to npm.
-
-The intended import pattern is:
-
-```ts
-import { Logscope } from '@logscopeai/logscope';
-```
-
-Compatibility with `npm link` is a design requirement.
-
----
+See `docs/supported-beta-policy.md` for the support and deprecation policy, and
+`docs/compatibility-contract.md` for the supported-beta compatibility baseline.
 
 ## What This Package Does
 
 - Captures logs from:
-  - `console.log`, `console.info`, `console.warn`, `console.error` (opt-in)
-  - Manual SDK logging API
-  - Pino (via explicit transport)
-  - Winston (via explicit transport)
-
-- Normalizes logs to the Logscope ingestion contract
-- Applies optional client-side filtering
-- Batches logs (max 50 per request)
-- Sends logs asynchronously to the Logscope Ingestion API
-- Never throws into user code
-
----
+  - the manual SDK API;
+  - optional console capture;
+  - pino via `@logscopeai/logscope/pino`;
+  - winston via `@logscopeai/logscope/winston`.
+- Normalizes logs to the ingestion schema.
+- Applies optional level-based filtering before batching.
+- Batches logs in memory and sends them asynchronously.
+- Retries retriable delivery failures with backoff.
+- Avoids throwing into user code.
 
 ## What This Package Does Not Do
 
-- Store logs
-- Query logs
-- Render dashboards
-- Perform AI analysis
-- Persist logs to disk
-- Replace structured logging frameworks
-
----
+- Validate API keys semantically against server-side policy.
+- Persist logs to disk.
+- Provide storage, analytics, dashboarding, or querying.
+- Replace structured logging frameworks.
+- Offer GA/SLA guarantees.
 
 ## Installation
 
-```
+```bash
 npm install @logscopeai/logscope
 ```
 
-Or during development:
+For workspace development and local package iteration, `npm link` remains supported. See
+`docs/local-development.md` for the canonical SDK-side local link and endpoint guidance.
 
-```
-npm link @logscopeai/logscope
-```
-
----
-
-## Basic Usage (Class API)
+## Quick Start (`Logscope`)
 
 ```ts
 import { Logscope } from '@logscopeai/logscope';
@@ -99,16 +71,18 @@ logscope.error('Payment failed', { orderId: 123 });
 https://ingestion.logscopeai.com
 ```
 
-For development/testing, override `ingestionBaseUrl` explicitly:
+For local or test environments, override `ingestionBaseUrl` explicitly:
 
 ```ts
 const logscope = new Logscope({
   apiKey: process.env.LOGSCOPE_API_KEY!,
-  ingestionBaseUrl: 'http://your-ingestion-origin',
+  ingestionBaseUrl: 'http://localhost:3000',
 });
 ```
 
-Compatibility API (`createLogscopeClient`) remains available:
+## Compatibility Factory (`createLogscopeClient`)
+
+The compatibility entrypoint remains available:
 
 ```ts
 import { createLogscopeClient } from '@logscopeai/logscope';
@@ -132,39 +106,73 @@ const logscope = createLogscopeClient({
 });
 ```
 
-Manual API calls (`trace`/`debug`/`info`/`warn`/`error`/`fatal`) normalize logs and enqueue them for asynchronous batching (max 50 entries per request, interval flush fallback).
+`createLogscopeClient` and `Logscope` expose the same manual log methods:
 
----
+- `trace`
+- `debug`
+- `info`
+- `warn`
+- `error`
+- `fatal`
 
-## Validation and Safety Guards
+## Client Configuration
+
+Client config highlights:
+
+- `apiKey` is required.
+- `ingestionBaseUrl` is the canonical client override for local/dev/test routing.
+- `endpoint` is still accepted on the root client as a deprecated compatibility alias.
+- `captureConsole` is opt-in and disabled by default.
+- `context.source` is optional and deprecated as required caller input; omitted values fall back to
+  deterministic source `unknown`.
+- `runtime` controls batching and retry quantities through validated safe defaults.
+
+Runtime delivery knobs:
+
+```ts
+runtime: {
+  maxBatchSize?: number; // default: 50, bounded to ingestion contract max
+  flushIntervalMs?: number; // default: 2000
+  maxRetries?: number; // default: 3
+  retryBaseDelayMs?: number; // default: 250
+  retryMaxDelayMs?: number; // default: 2000
+}
+```
+
+Invalid runtime overrides are ignored safely and fallback to defaults without throwing.
+
+## Validation And Safety Guarantees
 
 Runtime guards are applied before delivery:
 
-- Required config fields are validated:
-  - Client: `apiKey`
-  - Pino transport: `apiKey`, `endpoint`, `source`
-  - Winston transport: `apiKey`, `endpoint`, `source`
-- Invalid required config triggers a single safe warning and switches to a no-op fallback pipeline.
+- Required config fields are validated before pipeline creation.
+- Invalid required config triggers a safe warning and switches the client/transport into no-op
+  fallback behavior.
 - Warning diagnostics never include secret values such as API keys.
-- `ingestionBaseUrl` is optional in SDK client config. Missing or invalid values fallback to the production default.
-- `context.source` is optional; when omitted, emitted logs use deterministic fallback source value `unknown`.
-- The SDK does not expose an `environment` routing field. Tenant/environment ownership is resolved by API key scope on the ingestion side.
+- `ingestionBaseUrl` is optional on the root client and falls back to the production default when
+  omitted or invalid.
+- The SDK does not expose a client-owned `environment` routing field.
 
 Normalization enforces ingestion constraints:
 
 - `message` is deterministically truncated to `<= 2048` characters.
 - `metadata` is normalized to JSON-safe content and dropped if serialized size is `> 2048` bytes.
 
-All guard paths are fail-safe and never throw into user code.
+Fail-safe expectations:
 
----
+- The SDK must never throw into user code.
+- Filtering happens before batching.
+- `401` results warn once.
+- `429` and `500` results retry with backoff.
+- Batches are dropped after max retries are exhausted.
 
-## Public Types and Utilities
+## Public Types And Utilities
 
-The root entrypoint also exports shared contracts and normalization utilities:
+The root entrypoint exports the class API, compatibility factory, shared types, constants, and
+normalization utility:
 
 ```ts
-import { Logscope, normalizeLog } from '@logscopeai/logscope';
+import { Logscope, createLogscopeClient, normalizeLog } from '@logscopeai/logscope';
 import type {
   IngestionLogEntry,
   LogLevel,
@@ -174,13 +182,21 @@ import type {
 } from '@logscopeai/logscope';
 ```
 
-`normalizeLog` converts SDK log input into ingestion-safe entries using `{ source, level, timestamp, message, metadata? }`.
+`normalizeLog` converts SDK log input into ingestion-safe entries using:
 
----
+```ts
+{
+  source,
+  level,
+  timestamp,
+  message,
+  metadata?,
+}
+```
 
 ## Filtering Logs
 
-Users may restrict which logs are sent to Logscope:
+`logFilter.levels` restricts which levels enter the delivery pipeline:
 
 ```ts
 logFilter: {
@@ -188,50 +204,26 @@ logFilter: {
 }
 ```
 
-If no filter is configured, all logs are sent.
-
-If `logFilter.levels` is configured as an empty array (`[]`), all logs are filtered out.
-
----
-
-## Runtime Delivery Configuration
-
-Runtime batching and retry quantities are configurable through `runtime` on client config:
-
-```ts
-runtime: {
-  maxBatchSize?: number; // default: 50 (bounded to ingestion contract max)
-  flushIntervalMs?: number; // default: 2000
-  maxRetries?: number; // default: 3
-  retryBaseDelayMs?: number; // default: 250
-  retryMaxDelayMs?: number; // default: 2000
-}
-```
-
-Invalid runtime quantity overrides are ignored safely and fallback to defaults without throwing.
-
----
+- If no filter is configured, all logs are sent.
+- If `logFilter.levels` is an empty array, all logs are filtered out.
 
 ## Console Capture
 
 `captureConsole` is disabled by default.
 
-When set to `true`, the SDK wraps:
+When enabled, the SDK wraps:
 
-- `console.log` (mapped to `info`)
-- `console.info` (mapped to `info`)
-- `console.warn` (mapped to `warn`)
-- `console.error` (mapped to `error`)
+- `console.log` -> `info`
+- `console.info` -> `info`
+- `console.warn` -> `warn`
+- `console.error` -> `error`
 
-Wrapped methods keep original console output and arguments, and captured entries are forwarded through the same filtering and batching pipeline used by the manual client API.
+Original console behavior is preserved, and captured entries flow through the same filtering and
+batching pipeline used by the manual client API.
 
----
+## Pino Integration
 
-## Using Logscope with Pino
-
-Logscope does not intercept pino automatically.
-
-Instead, it provides an explicit transport:
+Logscope does not intercept pino automatically. Use the explicit transport subpath:
 
 ```ts
 import pino from 'pino';
@@ -243,7 +235,7 @@ const logger = pino({
         target: '@logscopeai/logscope/pino',
         options: {
           apiKey: process.env.LOGSCOPE_API_KEY,
-          endpoint: 'http://your-ingestion-origin',
+          endpoint: 'http://localhost:3000',
           source: 'billing-api',
         },
       },
@@ -252,15 +244,17 @@ const logger = pino({
 });
 ```
 
-The transport maps standard pino levels (`10/20/30/40/50/60`) to Logscope levels (`trace/debug/info/warn/error/fatal`), applies `logFilter.levels` before enqueueing, and sends through the same batch/retry pipeline.
+Pino transport notes:
 
----
+- transport option name remains `endpoint`;
+- `source` is required on the transport surface;
+- pino levels `10/20/30/40/50/60` map to Logscope levels
+  `trace/debug/info/warn/error/fatal`;
+- filtering still happens before batching.
 
-## Using Logscope with Winston
+## Winston Integration
 
-Logscope does not patch Winston automatically.
-
-Instead, it provides an explicit transport:
+Logscope does not patch winston globally. Use the explicit transport subpath:
 
 ```ts
 import { createLogger, format } from 'winston';
@@ -272,7 +266,7 @@ const logger = createLogger({
   transports: [
     createWinstonTransport({
       apiKey: process.env.LOGSCOPE_API_KEY!,
-      endpoint: 'http://your-ingestion-origin',
+      endpoint: 'http://localhost:3000',
       source: 'billing-api',
       logFilter: {
         levels: ['warn', 'error'],
@@ -282,97 +276,61 @@ const logger = createLogger({
 });
 ```
 
-The Winston transport maps default npm levels (`error/warn/info/http/verbose/debug/silly`) to Logscope levels (`error/warn/info/info/debug/debug/trace`), applies `logFilter.levels` before enqueueing, and forwards through the same batch/retry pipeline.
+Winston transport notes:
 
----
+- transport option name remains `endpoint`;
+- `source` is required on the transport surface;
+- default npm levels map to Logscope levels
+  `error/warn/info/info/debug/debug/trace`;
+- filtering still happens before batching.
 
-## API Contract
+## Ingestion Contract Summary
 
-Logs are sent to:
+The SDK sends logs to:
 
-```
+```text
 POST /api/logs/ingest
 ```
 
 Using header:
 
-```
+```text
 x-api-key: <LOGSCOPE_API_KEY>
 ```
 
-The request body must follow the ingestion API contract defined in the Logscope specification.
-
-Transport status handling is classified as:
+Response handling:
 
 - `202` -> success
-- `400` / `413` -> drop
+- `400` / `413` -> drop batch
 - `401` -> unauthorized warning path
 - `429` / `500` -> retry with backoff
 - retriable batches are dropped after max retries
 
----
+## Current Limits And Non-Goals
 
-## Status
+- Supported beta, not GA.
+- No disk persistence or local buffering.
+- No sampling, tracing, or OpenTelemetry surface.
+- No hidden global patching of pino or winston.
+- No synchronous I/O.
 
-This SDK is currently:
+## Testing And Build
 
-- Supported beta for the current Core onboarding path
-- Under active development
-- Intended for deliberate versioned rollouts rather than a blanket GA promise
-- Subject to API changes with explicit review recommended before production upgrades
-
----
-
-## Testing Conventions
-
-Unit tests must be co-located with the files they validate.
-
-Use either `.test.ts` or `.spec.ts` next to the implementation file, for example:
-
-```text
-src/
-  dirA/
-    file.ts
-    file.spec.ts
-  dirB/
-    otherFile.ts
-    otherFile.test.ts
-```
-
-Run tests with:
+Run the standard verification flow from a clean checkout:
 
 ```bash
+npm ci
 npm test
+npm run build
 ```
 
-Run the explicit coverage gate locally with:
-
-```bash
-npm run test:coverage
-```
-
----
+Unit tests are co-located with the files they validate and coverage is enforced through Vitest.
 
 ## Additional Documentation
 
+- Support and deprecation policy: `docs/supported-beta-policy.md`
+- SDK compatibility contract: `docs/compatibility-contract.md`
+- Local development and `npm link` guidance: `docs/local-development.md`
+- Release verification checklist: `docs/release-verification.md`
 - Hardening and coverage matrix: `docs/hardening-and-testing.md`
 - Formatting and lint workflow: `docs/linting.md`
-
-## Local usage with `npm link`
-
-To run the package locally in other repositories, use `npm link`:
-
-Steps:
-
-1. In this repository:
-
-```
-npm link
-npm run build -- --watch
-```
-
-2. In the consuming repository:
-
-```
-npm link @logscopeai/logscope
-```
