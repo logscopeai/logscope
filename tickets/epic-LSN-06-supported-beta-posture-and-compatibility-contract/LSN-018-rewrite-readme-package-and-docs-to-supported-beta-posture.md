@@ -36,15 +36,19 @@ Rewrite SDK-facing docs and metadata so they accurately present the package as s
 
 ## Status
 
-Backlog
+Implemented
 
 ## Checklist
 
-- [ ] Update README and package-facing maturity language.
-- [ ] Remove stale experimental wording.
-- [ ] Keep fail-safe limits explicit.
-- [ ] Align examples with current package identity.
+- [x] Update README and package-facing maturity language.
+- [x] Remove stale experimental wording.
+- [x] Keep fail-safe limits explicit.
+- [x] Align examples with current package identity.
 
 ## Comments
 
-- Planning ticket only.
+- Completed on 2026-03-27.
+- Rewrote `README.md` around the supported-beta posture, current package identity, and explicit
+  fail-safe guarantees.
+- Updated `package.json`, `docs/hardening-and-testing.md`, and `logscope-spec.md` to remove stale
+  experimental/POC wording that conflicted with the intended release posture.

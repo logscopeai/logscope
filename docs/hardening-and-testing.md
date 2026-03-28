@@ -1,6 +1,7 @@
-# Hardening and Test Matrix (Milestone 4)
+# Hardening and Test Matrix
 
-This document records how `@logscopeai/logscope` satisfies Milestone 4 hardening goals and test coverage expectations from spec section 12.
+This document records how `@logscopeai/logscope` satisfies its supported-beta hardening goals and
+test coverage expectations from spec section 12.
 
 ## Runtime hardening summary
 
@@ -60,7 +61,7 @@ Coverage thresholds are enforced in `vitest.config.ts`:
 
 ## Local development (`npm link`)
 
-POC local-link workflow remains supported:
+Local-link workflow remains supported:
 
 ```bash
 npm link
@@ -74,7 +75,7 @@ npm link @logscopeai/logscope
 
 ## Known limitations and non-goals
 
-- POC scope only, not production-ready.
+- Supported beta, not GA.
 - No disk persistence or buffering.
 - No API key semantic validation against server.
 - No storage, analytics, dashboard, or querying capabilities.

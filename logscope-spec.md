@@ -4,15 +4,17 @@
 
 This document defines the functional and technical specification for `@logscopeai/logscope`.
 
-This specification targets a Proof of Concept implementation intended to validate:
+This specification targets the supported-beta implementation and documents the behavior customers
+and internal consumers can currently rely on:
 
 - SDK architecture
-- Ingestion API contract compatibility
-- Developer experience
-- Filtering behavior
-- Batch delivery mechanics
+- ingestion API contract compatibility
+- developer experience
+- filtering behavior
+- batch delivery mechanics
+- fail-safe delivery guarantees
 
-This is not a production-ready specification.
+This is a pre-GA specification, not a general-availability commitment.
 
 ---
 
@@ -23,7 +25,8 @@ Distribution: npm
 Runtime target: Node.js  
 Language: TypeScript
 
-During early phases, the SDK must support execution via `npm link` and work seamlessly inside local development environments.
+During supported beta, the SDK must support execution via `npm link` and work seamlessly inside
+local development environments.
 
 ---
 
@@ -276,7 +279,7 @@ Must not:
   - `runtime.retryMaxDelayMs` (default 2000)
 - Invalid runtime quantity overrides must fallback safely to defaults.
 
-No disk persistence in POC.
+No disk persistence in supported beta.
 
 ---
 
@@ -308,7 +311,7 @@ Required coverage areas:
 
 ---
 
-## 13. Development Path (POC Milestones)
+## 13. Development Milestones
 
 ### Milestone 1
 
@@ -339,7 +342,7 @@ Required coverage areas:
 
 ---
 
-## 14. Non-Goals (POC Phase)
+## 14. Non-Goals (Supported-Beta Phase)
 
 - Disk buffering
 - Sampling
@@ -352,7 +355,7 @@ Required coverage areas:
 
 ## 15. Objective
 
-Deliver a functional, test-covered base implementation of `@logscopeai/logscope` that:
+Deliver a functional, test-covered supported-beta implementation of `@logscopeai/logscope` that:
 
 - Respects the ingestion API contract
 - Supports local development via npm link
