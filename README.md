@@ -1,22 +1,27 @@
 # @logscopeai/logscope
 
-> ⚠️ **Pre-release Software**
+> Supported beta
 >
-> This package is experimental and must not be used in production environments.
-> It is provided strictly for local testing, development, and proof-of-concept validation.
-> Breaking changes may occur in any minor or patch release.
+> `@logscopeai/logscope` is the supported Node.js SDK for the current Logscope release-stage
+> onboarding path. Treat version changes deliberately before production rollouts; this is not yet
+> presented as a GA stability promise.
 
 `@logscopeai/logscope` is the official Node.js SDK for Logscope.
 
 It enables Node.js applications to capture logs, normalize them, enrich them with execution context, and send them asynchronously to the Logscope Ingestion API for downstream processing.
 
-Logscope is currently in early development. This SDK is intended for proof-of-concept validation and is not production-ready.
+For the full customer onboarding order, start with Logscope Core:
+
+- `/docs/first-value-journey`
+- `logscope-core-web-app/docs/customer-onboarding-guide.md`
+
+This README owns package/runtime specifics only.
 
 ---
 
-## Early Development Mode
+## Local Development and Linked Workspace Mode
 
-During early development phases, `@logscopeai/logscope` is expected to be executed locally using:
+For local workspace development, `@logscopeai/logscope` is expected to be executed locally using:
 
 ```
 npm link
@@ -99,7 +104,7 @@ For development/testing, override `ingestionBaseUrl` explicitly:
 ```ts
 const logscope = new Logscope({
   apiKey: process.env.LOGSCOPE_API_KEY!,
-  ingestionBaseUrl: 'http://localhost:3000',
+  ingestionBaseUrl: 'http://your-ingestion-origin',
 });
 ```
 
@@ -238,7 +243,7 @@ const logger = pino({
         target: '@logscopeai/logscope/pino',
         options: {
           apiKey: process.env.LOGSCOPE_API_KEY,
-          endpoint: 'http://localhost:3000',
+          endpoint: 'http://your-ingestion-origin',
           source: 'billing-api',
         },
       },
@@ -267,7 +272,7 @@ const logger = createLogger({
   transports: [
     createWinstonTransport({
       apiKey: process.env.LOGSCOPE_API_KEY!,
-      endpoint: 'http://localhost:3000',
+      endpoint: 'http://your-ingestion-origin',
       source: 'billing-api',
       logFilter: {
         levels: ['warn', 'error'],
@@ -311,10 +316,10 @@ Transport status handling is classified as:
 
 This SDK is currently:
 
-- POC-focused
+- Supported beta for the current Core onboarding path
 - Under active development
-- Not production-ready
-- Subject to API changes
+- Intended for deliberate versioned rollouts rather than a blanket GA promise
+- Subject to API changes with explicit review recommended before production upgrades
 
 ---
 
