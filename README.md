@@ -65,7 +65,13 @@ logscope.info('Service started');
 logscope.error('Payment failed', { orderId: 123 });
 ```
 
-`new Logscope({ apiKey })` uses the production ingestion URL default:
+`new Logscope({ apiKey })` currently uses the dev ingestion URL default:
+
+```text
+https://dev.ingestion.logscopeai.com
+```
+
+The planned production ingestion URL is:
 
 ```text
 https://ingestion.logscopeai.com
@@ -149,7 +155,7 @@ Runtime guards are applied before delivery:
 - Invalid required config triggers a safe warning and switches the client/transport into no-op
   fallback behavior.
 - Warning diagnostics never include secret values such as API keys.
-- `ingestionBaseUrl` is optional on the root client and falls back to the production default when
+- `ingestionBaseUrl` is optional on the root client and falls back to the current dev default when
   omitted or invalid.
 - The SDK does not expose a client-owned `environment` routing field.
 

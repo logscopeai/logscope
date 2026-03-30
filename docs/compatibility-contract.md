@@ -54,7 +54,9 @@ Documented root behavior that is compatibility-sensitive:
   - `retryBaseDelayMs`: `250`
   - `retryMaxDelayMs`: `2000`
 - `new Logscope({ apiKey })` continues to default to
-  `https://ingestion.logscopeai.com` when no client override is provided.
+  `https://dev.ingestion.logscopeai.com` when no client override is provided.
+- The planned production ingestion URL remains `https://ingestion.logscopeai.com`, but it is not
+  the current SDK default yet.
 
 ## Integration contract
 
