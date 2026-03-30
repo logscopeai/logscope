@@ -30,6 +30,7 @@
     "test": "vitest run --coverage",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "prepare": "husky install",
     "format": "prettier --config .prettierrc --write .",
     "format:check": "prettier --config .prettierrc --check ."
   },
@@ -62,7 +63,9 @@
     "winston": "^3.19.0"
   },
   "lint-staged": {
-    "*.{ts,js,tsx,jsx,html,css,scss,json,md}": "npx prettier --config .prettierrc --write"
+    "*.{ts,js,tsx,jsx,html,css,scss,json,md}": [
+      "npx prettier --config .prettierrc --write"
+    ]
   },
   "engines": {
     "node": ">=20"
