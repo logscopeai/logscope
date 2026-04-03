@@ -4,7 +4,7 @@
 
 This document defines the functional and technical specification for `@logscopeai/logscope`.
 
-This specification targets the supported-beta implementation and documents the behavior customers
+This specification targets the stable `1.0` implementation and documents the behavior customers
 and internal consumers can currently rely on:
 
 - SDK architecture
@@ -14,7 +14,7 @@ and internal consumers can currently rely on:
 - batch delivery mechanics
 - fail-safe delivery guarantees
 
-This is a pre-GA specification, not a general-availability commitment.
+This is a stable `1.0` SDK specification, not a hosted-service SLA commitment.
 
 ---
 
@@ -25,7 +25,7 @@ Distribution: npm
 Runtime target: Node.js  
 Language: TypeScript
 
-During supported beta, the SDK must support execution via `npm link` and work seamlessly inside
+During stable `1.0`, the SDK must support execution via `npm link` and work seamlessly inside
 local development environments.
 
 ---
@@ -269,7 +269,7 @@ Must not:
   - `runtime.retryMaxDelayMs` (default 2000)
 - Invalid runtime quantity overrides must fallback safely to defaults.
 
-No disk persistence in supported beta.
+No disk persistence in stable `1.0`.
 
 ---
 
@@ -332,7 +332,7 @@ Required coverage areas:
 
 ---
 
-## 14. Non-Goals (Supported-Beta Phase)
+## 14. Non-Goals (Stable 1.0 Phase)
 
 - Disk buffering
 - Sampling
@@ -345,7 +345,7 @@ Required coverage areas:
 
 ## 15. Objective
 
-Deliver a functional, test-covered supported-beta implementation of `@logscopeai/logscope` that:
+Deliver a functional, test-covered stable `1.0` implementation of `@logscopeai/logscope` that:
 
 - Respects the ingestion API contract
 - Supports local development via npm link

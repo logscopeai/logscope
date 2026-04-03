@@ -1,26 +1,27 @@
 # @logscopeai/logscope
 
-> Supported beta for the Logscope ingestion SDK.
+> Stable `1.0` Node.js SDK for sending application logs to the Logscope Ingestion API.
 >
-> `@logscopeai/logscope` is the official Node.js SDK for sending application logs to the Logscope
-> Ingestion API. The package is pre-GA, but its documented public behavior is treated as
-> compatibility-sensitive and is maintained with a conservative, fail-safe posture.
+> `@logscopeai/logscope` is the official Node.js SDK for Logscope producers. The documented public
+> contract is now stable `1.0` and is maintained with a conservative, fail-safe posture.
 
 `@logscopeai/logscope` lets Node.js applications capture logs, normalize them to the ingestion
 schema, apply optional client-side filtering, batch delivery asynchronously, and forward logs to
 Logscope without throwing into user code.
 
-## Supported Beta Posture
+## Stable 1.0 Posture
 
-- Supported beta means the SDK is intended for real integrations, not only disposable local demos.
-- Supported beta does not mean GA:
-  - internal implementation may still evolve;
-  - future beta releases may add or refine surface area;
-  - users should still pin versions deliberately and validate upgrades.
-- Public behavior that is documented for consumers is treated as compatibility-sensitive.
+- Stable `1.0` means the documented SDK contract is intended for real integrations and deliberate
+  long-lived usage.
+- Stable `1.0` does not mean every future feature already exists:
+  - no disk persistence or local buffering;
+  - no sampling, tracing, or OpenTelemetry surface;
+  - no hidden global patching of pino or winston.
+- Documented public behavior remains compatibility-sensitive and requires deliberate review before
+  it changes.
 
-See `docs/supported-beta-policy.md` for the support and deprecation policy, and
-`docs/compatibility-contract.md` for the supported-beta compatibility baseline.
+See `docs/stable-1.0-policy.md` for the stability and change policy, and
+`docs/compatibility-contract.md` for the stable `1.0` contract baseline.
 
 ## What This Package Does
 
@@ -41,7 +42,7 @@ See `docs/supported-beta-policy.md` for the support and deprecation policy, and
 - Persist logs to disk.
 - Provide storage, analytics, dashboarding, or querying.
 - Replace structured logging frameworks.
-- Offer GA/SLA guarantees.
+- Provide hosted-service SLA guarantees by itself.
 
 ## Installation
 
@@ -50,7 +51,7 @@ npm install @logscopeai/logscope
 ```
 
 For workspace development and local package iteration, `npm link` remains supported. See
-`docs/local-development.md` for the canonical SDK-side local link and endpoint guidance.
+`docs/local-development.md` for the canonical SDK-side local-link and local-topology guidance.
 
 ## Quick Start (`Logscope`)
 
@@ -65,7 +66,7 @@ logscope.info('Service started');
 logscope.error('Payment failed', { orderId: 123 });
 ```
 
-`new Logscope({ apiKey })` currently uses the dev ingestion URL default:
+`new Logscope({ apiKey })` currently uses this default ingestion URL:
 
 ```text
 https://dev.ingestion.logscopeai.com
@@ -100,7 +101,8 @@ const logscope = new Logscope({
 Client config highlights:
 
 - `apiKey` is required.
-- `ingestionBaseUrl` is the canonical client override for local/dev/test routing.
+- `ingestionBaseUrl` is the canonical root-client override for local, development, and test
+  routing.
 - `captureConsole` is opt-in and disabled by default.
 - Root-client logs always use the deterministic fallback source `unknown`.
 - `runtime` controls batching and retry quantities through validated safe defaults.
@@ -124,10 +126,10 @@ Invalid runtime overrides are ignored safely and fallback to defaults without th
 Runtime guards are applied before delivery:
 
 - Required config fields are validated before pipeline creation.
-- Invalid required config triggers a safe warning and switches the client/transport into no-op
+- Invalid required config triggers a safe warning and switches the client or transport into no-op
   fallback behavior.
 - Warning diagnostics never include secret values such as API keys.
-- `ingestionBaseUrl` is optional on the root client and falls back to the current dev default when
+- `ingestionBaseUrl` is optional on the root client and falls back to the current default when
   omitted or invalid.
 - The SDK does not expose a client-owned `environment` routing field.
 
@@ -284,7 +286,7 @@ Response handling:
 
 ## Current Limits And Non-Goals
 
-- Supported beta, not GA.
+- Stable `1.0` SDK contract, not a hosted-service SLA promise.
 - No disk persistence or local buffering.
 - No sampling, tracing, or OpenTelemetry surface.
 - No hidden global patching of pino or winston.
@@ -304,8 +306,8 @@ Unit tests are co-located with the files they validate and coverage is enforced 
 
 ## Additional Documentation
 
-- Support and deprecation policy: `docs/supported-beta-policy.md`
-- SDK compatibility contract: `docs/compatibility-contract.md`
+- Stability and change policy: `docs/stable-1.0-policy.md`
+- Stable SDK contract: `docs/compatibility-contract.md`
 - Local development and `npm link` guidance: `docs/local-development.md`
 - Release verification checklist: `docs/release-verification.md`
 - Hardening and coverage matrix: `docs/hardening-and-testing.md`
