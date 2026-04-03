@@ -18,7 +18,7 @@ const emitBatch = (logscope: Logscope): void => {
 };
 
 describe('Logscope', () => {
-  it('uses the centralized production ingestion base URL by default', async () => {
+  it('uses the current default ingestion base URL by default', async () => {
     const fetchMock: FetchLike = vi.fn().mockResolvedValue({
       status: 202,
     });
@@ -76,7 +76,7 @@ describe('Logscope', () => {
     }
   });
 
-  it('falls back to endpoint when ingestionBaseUrl is an empty string', async () => {
+  it('ignores deprecated endpoint when ingestionBaseUrl is missing', async () => {
     const fetchMock: FetchLike = vi.fn().mockResolvedValue({
       status: 202,
     });
@@ -88,22 +88,21 @@ describe('Logscope', () => {
     try {
       const logscope = new Logscope({
         apiKey: 'test-api-key',
-        ingestionBaseUrl: '',
         endpoint: 'http://localhost:3000',
-      });
+      } as unknown as LogscopeInitConfig);
 
       emitBatch(logscope);
       await flushAsyncWork();
 
       expect(fetchMock).toHaveBeenCalledTimes(1);
-      expect(fetchMock.mock.calls[0]?.[0]).toBe('http://localhost:3000/api/logs/ingest');
+      expect(fetchMock.mock.calls[0]?.[0]).toBe(`${DEFAULT_INGESTION_BASE_URL}/api/logs/ingest`);
     } finally {
       logSpy.mockRestore();
       globalThis.fetch = originalFetch;
     }
   });
 
-  it('falls back to endpoint when ingestionBaseUrl is whitespace-only', async () => {
+  it('ignores deprecated endpoint when ingestionBaseUrl is whitespace-only', async () => {
     const fetchMock: FetchLike = vi.fn().mockResolvedValue({
       status: 202,
     });
@@ -117,13 +116,13 @@ describe('Logscope', () => {
         apiKey: 'test-api-key',
         ingestionBaseUrl: '   ',
         endpoint: 'http://localhost:3000',
-      });
+      } as unknown as LogscopeInitConfig);
 
       emitBatch(logscope);
       await flushAsyncWork();
 
       expect(fetchMock).toHaveBeenCalledTimes(1);
-      expect(fetchMock.mock.calls[0]?.[0]).toBe('http://localhost:3000/api/logs/ingest');
+      expect(fetchMock.mock.calls[0]?.[0]).toBe(`${DEFAULT_INGESTION_BASE_URL}/api/logs/ingest`);
     } finally {
       logSpy.mockRestore();
       globalThis.fetch = originalFetch;

@@ -12,46 +12,15 @@ export interface LogscopeRuntimeConfig {
   retryMaxDelayMs?: number;
 }
 
-interface LogscopeConfigBase {
+export interface LogscopeConfig {
   apiKey: string;
+  ingestionBaseUrl?: string;
   captureConsole?: boolean;
-  context?: {
-    /**
-     * @deprecated Source input is optional and falls back safely when omitted.
-     */
-    source?: string;
-  };
   logFilter?: LogFilterConfig;
   runtime?: LogscopeRuntimeConfig;
 }
 
-export interface LogscopeInitConfig {
-  apiKey: string;
-  ingestionBaseUrl?: string;
-  /**
-   * @deprecated Use ingestionBaseUrl instead.
-   */
-  endpoint?: string;
-  captureConsole?: boolean;
-  context?: {
-    /**
-     * @deprecated Source input is optional and falls back safely when omitted.
-     */
-    source?: string;
-  };
-  logFilter?: LogFilterConfig;
-  runtime?: LogscopeRuntimeConfig;
-}
-
-interface LogscopeIngestionTarget {
-  ingestionBaseUrl?: string;
-  /**
-   * @deprecated Use ingestionBaseUrl instead.
-   */
-  endpoint?: string;
-}
-
-export type LogscopeConfig = LogscopeConfigBase & LogscopeIngestionTarget;
+export type LogscopeInitConfig = LogscopeConfig;
 
 export interface LogscopeClient {
   trace(message: string, metadata?: unknown): void;

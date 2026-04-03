@@ -17,9 +17,6 @@ describe('guardLogscopeClientConfig', () => {
       apiKey: 'api-key',
       ingestionBaseUrl: 'http://localhost:3000',
       captureConsole: true,
-      context: {
-        source: 'billing-api',
-      },
       logFilter: {
         levels: ['warn', 'error'],
       },
@@ -29,7 +26,7 @@ describe('guardLogscopeClientConfig', () => {
       isValid: true,
       apiKey: 'api-key',
       ingestionBaseUrl: 'http://localhost:3000',
-      source: 'billing-api',
+      source: 'unknown',
       captureConsole: true,
       logFilter: {
         levels: ['warn', 'error'],
@@ -65,20 +62,17 @@ describe('guardLogscopeClientConfig', () => {
     expect(result.invalidFields).toEqual(['apiKey']);
   });
 
-  it('accepts deprecated endpoint as fallback when ingestionBaseUrl is missing', () => {
+  it('ignores deprecated endpoint when ingestionBaseUrl is missing', () => {
     const result = guardLogscopeClientConfig({
       apiKey: 'api-key',
       endpoint: 'http://localhost:3000',
-      context: {
-        source: 'billing-api',
-      },
-    });
+    } as unknown);
 
     expect(result).toEqual({
       isValid: true,
       apiKey: 'api-key',
-      ingestionBaseUrl: 'http://localhost:3000',
-      source: 'billing-api',
+      ingestionBaseUrl: DEFAULT_INGESTION_BASE_URL,
+      source: 'unknown',
       captureConsole: false,
       logFilter: undefined,
       runtimeConfig: {
@@ -100,11 +94,14 @@ describe('guardLogscopeClientConfig', () => {
     expect(result.isValid).toBe(true);
   });
 
-  it('treats context.source as optional and applies deterministic fallback source', () => {
+  it('ignores deprecated context.source and applies deterministic fallback source', () => {
     const result = guardLogscopeClientConfig({
       apiKey: 'api-key',
       ingestionBaseUrl: 'http://localhost:3000',
-    });
+      context: {
+        source: 'billing-api',
+      },
+    } as unknown);
 
     expect(result).toEqual({
       isValid: true,

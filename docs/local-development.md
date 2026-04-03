@@ -28,8 +28,8 @@ API service listens on port `3000`.
 
 ## Root client local override
 
-The root SDK client uses the production ingestion URL by default. Override it explicitly for local
-validation:
+The root SDK client currently defaults to `https://dev.ingestion.logscopeai.com`. Override
+`ingestionBaseUrl` explicitly for local validation:
 
 ```ts
 import { Logscope } from '@logscopeai/logscope';
@@ -40,8 +40,8 @@ const logscope = new Logscope({
 });
 ```
 
-`ingestionBaseUrl` is the canonical root-client override. The deprecated root-client alias
-`endpoint` remains compatibility-only.
+`ingestionBaseUrl` is the only root-client URL override. Root-client source input is not
+configurable.
 
 ## Pino and winston local overrides
 

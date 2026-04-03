@@ -35,13 +35,7 @@ local development environments.
 Primary v1 entry point:
 
 ```ts
-new Logscope(config: LogscopeConfig): LogscopeClient
-```
-
-Compatibility entry point (supported as alias during migration):
-
-```ts
-createLogscopeClient(config: LogscopeConfig): LogscopeClient
+new Logscope(config: LogscopeInitConfig): LogscopeClient
 ```
 
 ### LogscopeClient Interface
@@ -89,11 +83,7 @@ interface LogscopeRuntimeConfig {
 interface LogscopeConfig {
   apiKey: string;
   ingestionBaseUrl?: string; // optional override for local/dev/testing
-  endpoint?: string; // deprecated alias maintained for compatibility
   captureConsole?: boolean;
-  context?: {
-    source?: string; // deprecated caller input; SDK fallback is applied when omitted
-  };
   logFilter?: LogFilterConfig;
   runtime?: LogscopeRuntimeConfig;
 }
@@ -102,7 +92,7 @@ interface LogscopeConfig {
 Rules:
 
 - SDK initialization is runtime-config based and must not require direct environment-variable readers inside the package.
-- If `ingestionBaseUrl` is omitted, SDK uses a centralized production default.
+- If `ingestionBaseUrl` is omitted, SDK uses the current default `https://dev.ingestion.logscopeai.com`.
 - SDK must not expose a client-owned `environment` routing parameter.
 - Environment/application/organization ownership is resolved server-side from API key scope.
 
@@ -128,7 +118,7 @@ Constraints:
 - metadata JSON size <= 2048 bytes
 - max 50 logs per batch
 - minimum 1 log per request
-- `source` remains required in emitted ingestion entries; SDK must provide a deterministic fallback when caller input is omitted
+- `source` remains required in emitted ingestion entries; root-client logs use the deterministic fallback `unknown`
 
 ---
 

@@ -86,33 +86,7 @@ const logscope = new Logscope({
 });
 ```
 
-## Compatibility Factory (`createLogscopeClient`)
-
-The compatibility entrypoint remains available:
-
-```ts
-import { createLogscopeClient } from '@logscopeai/logscope';
-
-const logscope = createLogscopeClient({
-  apiKey: process.env.LOGSCOPE_API_KEY!,
-  captureConsole: true,
-  context: {
-    source: 'billing-api',
-  },
-  logFilter: {
-    levels: ['warn', 'error'],
-  },
-  runtime: {
-    maxBatchSize: 25,
-    flushIntervalMs: 1_000,
-    maxRetries: 5,
-    retryBaseDelayMs: 200,
-    retryMaxDelayMs: 4_000,
-  },
-});
-```
-
-`createLogscopeClient` and `Logscope` expose the same manual log methods:
+`Logscope` exposes these manual log methods:
 
 - `trace`
 - `debug`
@@ -127,10 +101,8 @@ Client config highlights:
 
 - `apiKey` is required.
 - `ingestionBaseUrl` is the canonical client override for local/dev/test routing.
-- `endpoint` is still accepted on the root client as a deprecated compatibility alias.
 - `captureConsole` is opt-in and disabled by default.
-- `context.source` is optional and deprecated as required caller input; omitted values fall back to
-  deterministic source `unknown`.
+- Root-client logs always use the deterministic fallback source `unknown`.
 - `runtime` controls batching and retry quantities through validated safe defaults.
 
 Runtime delivery knobs:
@@ -174,16 +146,14 @@ Fail-safe expectations:
 
 ## Public Types And Utilities
 
-The root entrypoint exports the class API, compatibility factory, shared types, constants, and
-normalization utility:
+The root entrypoint exports the class API, shared types, constants, and normalization utility:
 
 ```ts
-import { Logscope, createLogscopeClient, normalizeLog } from '@logscopeai/logscope';
+import { Logscope, normalizeLog } from '@logscopeai/logscope';
 import type {
   IngestionLogEntry,
   LogLevel,
   LogscopeClient,
-  LogscopeConfig,
   LogscopeInitConfig,
 } from '@logscopeai/logscope';
 ```

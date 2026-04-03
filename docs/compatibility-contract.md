@@ -25,14 +25,12 @@ contract only because they are currently reachable from TypeScript output.
 The supported-beta root API contract includes:
 
 - `Logscope` as the primary class entrypoint;
-- `createLogscopeClient` as the supported compatibility factory;
 - manual log methods `trace`, `debug`, `info`, `warn`, `error`, and `fatal`;
 - `normalizeLog` as the documented normalization utility;
 - documented consumer types from the root package, including:
   - `LogLevel`;
   - `LogFilterConfig`;
   - `LogscopeRuntimeConfig`;
-  - `LogscopeConfig`;
   - `LogscopeInitConfig`;
   - `LogscopeClient`;
   - `IngestionLogEntry`;
@@ -43,10 +41,7 @@ Documented root behavior that is compatibility-sensitive:
 
 - `apiKey` remains the only required root-client field.
 - `ingestionBaseUrl` remains the canonical root-client URL override.
-- `endpoint` remains a deprecated but supported root-client alias unless compatibility review
-  explicitly removes it.
-- `context.source` remains optional on the root client, with deterministic fallback source
-  `unknown`.
+- Root-client logs always emit the deterministic fallback source `unknown`.
 - Root-client runtime defaults remain documented and bounded:
   - `maxBatchSize`: `50`
   - `flushIntervalMs`: `2000`
