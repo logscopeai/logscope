@@ -51,7 +51,8 @@ npm install @logscopeai/logscope
 ```
 
 For workspace development and local package iteration, `npm link` remains supported. See
-`docs/local-development.md` for the canonical SDK-side local-link and local-topology guidance.
+`docs/local-development.md` for the canonical SDK-side standalone-vs-integrated local-topology
+guidance.
 
 ## Quick Start (`Logscope`)
 

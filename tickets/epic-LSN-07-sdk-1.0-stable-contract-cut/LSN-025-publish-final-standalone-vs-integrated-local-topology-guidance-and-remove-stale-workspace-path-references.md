@@ -31,4 +31,22 @@ references from SDK-owned docs.
 
 ## Status
 
-Backlog
+Implemented
+
+## Checklist
+
+- [x] Document standalone versus integrated local workspace runs from the SDK point of view.
+- [x] Align SDK local target guidance with the final workspace topology matrix.
+- [x] Confirm SDK-owned docs no longer reference the old sibling repo path `../logscope`.
+
+## Comments
+
+- Completed on 2026-04-03.
+- Rewrote `docs/local-development.md` around one explicit SDK-side topology matrix:
+  standalone ingestion on `http://localhost:3000` and integrated Core + Ingestion local runs with
+  the SDK targeting `http://localhost:3001`.
+- Updated `README.md` to point contributors at the new standalone-versus-integrated local guidance
+  instead of the older single-target wording.
+- Reviewed SDK-owned docs for stale sibling-path references and found no remaining `../logscope`
+  references after the local-topology rewrite. The guide now calls out `logscope-npm` explicitly in
+  the `npm link` workflow.
