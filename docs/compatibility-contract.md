@@ -1,14 +1,14 @@
-# SDK Compatibility Contract
+# Stable 1.0 SDK Contract
 
-This document defines the supported-beta compatibility contract for `@logscopeai/logscope`.
+This document defines the stable `1.0` public contract for `@logscopeai/logscope`.
 
 It is intentionally narrower than "everything that can be imported from the package today". The
 goal is to protect customer integrations and cross-repo dependencies without freezing internal
-implementation details that still need room to evolve during beta.
+implementation details that are not part of the supported SDK surface.
 
 ## Contract scope
 
-Changes to the following documented surfaces require explicit compatibility review:
+Changes to the following documented surfaces require explicit contract review:
 
 - the root package identity `@logscopeai/logscope`;
 - the logger transport subpaths `@logscopeai/logscope/pino` and
@@ -18,13 +18,13 @@ Changes to the following documented surfaces require explicit compatibility revi
 - documented fail-safe behavior and ingestion delivery classification.
 
 Undocumented exports, internal helper plumbing, and module layout are not automatically part of the
-contract only because they are currently reachable from TypeScript output.
+stable `1.0` contract only because they are currently reachable from TypeScript output.
 
 ## Root API contract
 
-The supported-beta root API contract includes:
+The stable `1.0` root API contract includes:
 
-- `Logscope` as the primary class entrypoint;
+- `Logscope` as the root client entrypoint;
 - manual log methods `trace`, `debug`, `info`, `warn`, `error`, and `fatal`;
 - `normalizeLog` as the documented normalization utility;
 - documented consumer types from the root package, including:
@@ -37,10 +37,10 @@ The supported-beta root API contract includes:
   - `NormalizeLogInput`;
   - `NormalizeLogOptions`.
 
-Documented root behavior that is compatibility-sensitive:
+Stable `1.0` root behavior:
 
 - `apiKey` remains the only required root-client field.
-- `ingestionBaseUrl` remains the canonical root-client URL override.
+- `ingestionBaseUrl` remains the only root-client URL override.
 - Root-client logs always emit the deterministic fallback source `unknown`.
 - Root-client runtime defaults remain documented and bounded:
   - `maxBatchSize`: `50`
@@ -49,13 +49,14 @@ Documented root behavior that is compatibility-sensitive:
   - `retryBaseDelayMs`: `250`
   - `retryMaxDelayMs`: `2000`
 - `new Logscope({ apiKey })` continues to default to
-  `https://dev.ingestion.logscopeai.com` when no client override is provided.
+  `https://dev.ingestion.logscopeai.com` when no root-client override is provided.
 - The planned production ingestion URL remains `https://ingestion.logscopeai.com`, but it is not
   the current SDK default yet.
+- The SDK does not expose a client-owned `environment` routing parameter.
 
 ## Integration contract
 
-The supported-beta integration contract includes:
+The stable `1.0` integration contract includes:
 
 - the published pino subpath `@logscopeai/logscope/pino`;
 - the published winston subpath `@logscopeai/logscope/winston`;
@@ -69,7 +70,7 @@ The supported-beta integration contract includes:
   - optional `flushIntervalMs`
   - optional `retryPolicy`
 
-Transport behavior that is compatibility-sensitive:
+Integration behavior that is compatibility-sensitive:
 
 - pino and winston integrations remain explicit opt-in transports; they do not patch frameworks
   globally;
@@ -84,7 +85,7 @@ Transport behavior that is compatibility-sensitive:
 
 ## Fail-safe behavior contract
 
-The supported-beta fail-safe contract includes:
+The stable `1.0` fail-safe contract includes:
 
 - the SDK must not throw into user code;
 - the SDK must not log secrets such as API keys in warnings;
@@ -105,9 +106,21 @@ Delivery classification that is compatibility-sensitive:
 - `429` and `500` trigger retry with backoff;
 - batches are dropped after max retries are exhausted.
 
-## Outside the compatibility contract
+## Explicit Removal List For Stable 1.0
 
-The following are intentionally outside the supported-beta contract unless they become documented
+The following pre-`1.0` compatibility-only root-client surfaces are intentionally removed from the
+stable contract:
+
+- the root-package export `createLogscopeClient`;
+- the root-client URL alias `endpoint`;
+- the root-client input `context.source`.
+
+These removals do not change the transport-side contract. Pino and winston integrations still use
+their documented `endpoint` and `source` fields.
+
+## Outside The Stable 1.0 Contract
+
+The following are intentionally outside the stable `1.0` contract unless they become documented
 later:
 
 - internal file/module structure;
@@ -119,11 +132,11 @@ later:
 - `createPinoTransportInternal`, `createWinstonTransportInternal`, transport dependency injection
   helpers, and mapper helpers exported for advanced/testing use.
 
-## Change expectations
+## Change Expectations
 
 Future changes should use this baseline:
 
 1. Preserve documented behavior when possible.
 2. Prefer additive expansion over silent breaking replacement.
 3. Deprecate before removal when it is safe to do so.
-4. Treat any change to this document as a compatibility-review event.
+4. Treat any change to this document as a stable-contract review event.
