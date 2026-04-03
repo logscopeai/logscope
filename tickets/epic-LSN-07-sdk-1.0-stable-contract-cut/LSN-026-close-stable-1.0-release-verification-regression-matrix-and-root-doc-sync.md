@@ -29,4 +29,26 @@ Close the stable SDK epic with synchronized docs, release verification, and root
 
 ## Status
 
-Backlog
+Implemented
+
+## Checklist
+
+- [x] Update SDK release verification for the stable `1.0` contract.
+- [x] Record the regression matrix required by the stable cut.
+- [x] Review root workspace docs and update the ones that drifted.
+
+## Comments
+
+- Completed on 2026-04-03.
+- Updated `docs/release-verification.md` so the stable `1.0` checklist now references the final SDK
+  contract docs and includes a stable-cut regression matrix.
+- Added `tickets/epic-LSN-07-sdk-1.0-stable-contract-cut/epic-LSN-07-sdk-1.0-stable-contract-cut_pr.md`
+  with a suggested PR title and descriptive PR body for the completed epic.
+- Reviewed root workspace docs:
+  - Updated `../project-docs/current-state.md`
+  - Updated `../project-docs/roadmap.md`
+  - Updated `../context.md`
+  - Updated `../integration-annotations.md`
+  - Reviewed `../README.md` and no change was needed
+  - Reviewed `../project-docs/capability-model.md` and no change was needed
+- Validation completed with `npm run format:check`, `npm test`, and `npm run build`.

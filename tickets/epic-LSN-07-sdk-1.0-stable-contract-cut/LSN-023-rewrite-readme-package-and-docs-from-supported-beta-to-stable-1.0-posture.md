@@ -29,4 +29,21 @@ Rewrite repo-visible maturity language so the SDK is presented as stable `1.0`.
 
 ## Status
 
-Backlog
+Implemented
+
+## Checklist
+
+- [x] Update README and package-facing maturity language.
+- [x] Replace supported-beta wording with stable `1.0` posture language.
+- [x] Keep remaining limits and non-goals explicit.
+
+## Comments
+
+- Completed on 2026-04-03.
+- Rewrote `README.md` around the stable `1.0` SDK posture, current package identity, and explicit
+  fail-safe limitations.
+- Updated `package.json` and `package-lock.json` to version `1.0.0` and replaced the repo-visible
+  package description with stable `1.0` wording.
+- Replaced `docs/supported-beta-policy.md` with `docs/stable-1.0-policy.md` and updated
+  `docs/release-verification.md`, `docs/hardening-and-testing.md`, `logscope-spec.md`, and
+  `AGENTS.md` so SDK-owned posture docs no longer describe the package as supported beta.

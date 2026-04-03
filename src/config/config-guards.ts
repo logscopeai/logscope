@@ -142,14 +142,9 @@ export const buildInvalidWinstonOptionsWarning = (
 export const guardLogscopeClientConfig = (config: unknown): ClientConfigGuardResult => {
   const apiKey = safeGetProperty(config, 'apiKey');
   const ingestionBaseUrlCandidate = safeGetProperty(config, 'ingestionBaseUrl');
-  const endpoint = safeGetProperty(config, 'endpoint');
   const ingestionBaseUrl = isNonEmptyString(ingestionBaseUrlCandidate)
     ? ingestionBaseUrlCandidate
-    : isNonEmptyString(endpoint)
-      ? endpoint
-      : DEFAULT_INGESTION_BASE_URL;
-  const context = safeGetProperty(config, 'context');
-  const source = safeGetProperty(context, 'source');
+    : DEFAULT_INGESTION_BASE_URL;
   const captureConsole = safeGetProperty(config, 'captureConsole') === true;
   const logFilter = normalizeLogFilter(safeGetProperty(config, 'logFilter'));
   const runtimeConfig = resolveRuntimeConfig(
@@ -166,7 +161,7 @@ export const guardLogscopeClientConfig = (config: unknown): ClientConfigGuardRes
     isValid: invalidFields.length === 0,
     apiKey: isNonEmptyString(apiKey) ? apiKey : '',
     ingestionBaseUrl,
-    source: isNonEmptyString(source) ? source : SAFE_FALLBACK_SOURCE,
+    source: SAFE_FALLBACK_SOURCE,
     captureConsole,
     logFilter,
     runtimeConfig,

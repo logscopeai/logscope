@@ -31,4 +31,20 @@ surfaces.
 
 ## Status
 
-Backlog
+Implemented
+
+## Checklist
+
+- [x] Define the stable `1.0` public SDK contract.
+- [x] Make the removal list for compatibility-only pre-release surfaces explicit.
+- [x] Keep fail-safe guarantees and transport boundaries clear for cross-repo references.
+
+## Comments
+
+- Completed on 2026-04-03.
+- Rewrote `docs/compatibility-contract.md` as the stable `1.0` contract artifact for the SDK.
+- The contract now defines the supported root API, transport surfaces, fail-safe delivery
+  guarantees, and one explicit removal list for pre-`1.0` compatibility-only root-client
+  surfaces.
+- The explicit removal list now covers the root-package `createLogscopeClient` export, the
+  root-client `endpoint` alias, and root-client `context.source`.

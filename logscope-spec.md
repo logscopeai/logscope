@@ -4,7 +4,7 @@
 
 This document defines the functional and technical specification for `@logscopeai/logscope`.
 
-This specification targets the supported-beta implementation and documents the behavior customers
+This specification targets the stable `1.0` implementation and documents the behavior customers
 and internal consumers can currently rely on:
 
 - SDK architecture
@@ -14,7 +14,7 @@ and internal consumers can currently rely on:
 - batch delivery mechanics
 - fail-safe delivery guarantees
 
-This is a pre-GA specification, not a general-availability commitment.
+This is a stable `1.0` SDK specification, not a hosted-service SLA commitment.
 
 ---
 
@@ -25,7 +25,7 @@ Distribution: npm
 Runtime target: Node.js  
 Language: TypeScript
 
-During supported beta, the SDK must support execution via `npm link` and work seamlessly inside
+During stable `1.0`, the SDK must support execution via `npm link` and work seamlessly inside
 local development environments.
 
 ---
@@ -35,13 +35,7 @@ local development environments.
 Primary v1 entry point:
 
 ```ts
-new Logscope(config: LogscopeConfig): LogscopeClient
-```
-
-Compatibility entry point (supported as alias during migration):
-
-```ts
-createLogscopeClient(config: LogscopeConfig): LogscopeClient
+new Logscope(config: LogscopeInitConfig): LogscopeClient
 ```
 
 ### LogscopeClient Interface
@@ -89,11 +83,7 @@ interface LogscopeRuntimeConfig {
 interface LogscopeConfig {
   apiKey: string;
   ingestionBaseUrl?: string; // optional override for local/dev/testing
-  endpoint?: string; // deprecated alias maintained for compatibility
   captureConsole?: boolean;
-  context?: {
-    source?: string; // deprecated caller input; SDK fallback is applied when omitted
-  };
   logFilter?: LogFilterConfig;
   runtime?: LogscopeRuntimeConfig;
 }
@@ -102,7 +92,7 @@ interface LogscopeConfig {
 Rules:
 
 - SDK initialization is runtime-config based and must not require direct environment-variable readers inside the package.
-- If `ingestionBaseUrl` is omitted, SDK uses a centralized production default.
+- If `ingestionBaseUrl` is omitted, SDK uses the current default `https://dev.ingestion.logscopeai.com`.
 - SDK must not expose a client-owned `environment` routing parameter.
 - Environment/application/organization ownership is resolved server-side from API key scope.
 
@@ -128,7 +118,7 @@ Constraints:
 - metadata JSON size <= 2048 bytes
 - max 50 logs per batch
 - minimum 1 log per request
-- `source` remains required in emitted ingestion entries; SDK must provide a deterministic fallback when caller input is omitted
+- `source` remains required in emitted ingestion entries; root-client logs use the deterministic fallback `unknown`
 
 ---
 
@@ -279,7 +269,7 @@ Must not:
   - `runtime.retryMaxDelayMs` (default 2000)
 - Invalid runtime quantity overrides must fallback safely to defaults.
 
-No disk persistence in supported beta.
+No disk persistence in stable `1.0`.
 
 ---
 
@@ -342,7 +332,7 @@ Required coverage areas:
 
 ---
 
-## 14. Non-Goals (Supported-Beta Phase)
+## 14. Non-Goals (Stable 1.0 Phase)
 
 - Disk buffering
 - Sampling
@@ -355,7 +345,7 @@ Required coverage areas:
 
 ## 15. Objective
 
-Deliver a functional, test-covered supported-beta implementation of `@logscopeai/logscope` that:
+Deliver a functional, test-covered stable `1.0` implementation of `@logscopeai/logscope` that:
 
 - Respects the ingestion API contract
 - Supports local development via npm link

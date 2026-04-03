@@ -1,19 +1,19 @@
 # Release Verification
 
-This document defines the supported-beta release verification flow for `@logscopeai/logscope`.
+This document defines the stable `1.0` release verification flow for `@logscopeai/logscope`.
 
 Use it before publishing or otherwise promoting a new SDK release candidate.
 
-## Verification checklist
+## Verification Checklist
 
-1. Confirm supported-beta docs are synchronized.
+1. Confirm stable `1.0` docs are synchronized.
    - Review `README.md`.
-   - Review `docs/supported-beta-policy.md`.
+   - Review `docs/stable-1.0-policy.md`.
    - Review `docs/compatibility-contract.md`.
    - Review `docs/local-development.md`.
    - Review `docs/hardening-and-testing.md`.
    - Review `logscope-spec.md`.
-2. Confirm repo-visible copy does not regress to experimental or POC posture.
+2. Confirm repo-visible copy does not regress to beta, experimental, or POC posture.
 3. Run formatting:
 
 ```bash
@@ -36,11 +36,12 @@ npm run build
    - package name remains `@logscopeai/logscope`;
    - root package export remains available;
    - `./pino` and `./winston` subpath exports remain published;
-   - root client default ingestion URL remains the production endpoint;
-   - local SDK docs still use `http://localhost:3000` as the canonical local ingestion target.
+   - root client default ingestion URL remains `https://dev.ingestion.logscopeai.com`;
+   - local SDK docs distinguish standalone target `http://localhost:3000` from integrated
+     workspace target `http://localhost:3001`.
 7. If the release changes a documented contract surface, update:
    - `docs/compatibility-contract.md`;
-   - `docs/supported-beta-policy.md` when deprecation posture changes;
+   - `docs/stable-1.0-policy.md` when stability or deprecation posture changes;
    - README examples and limitations;
    - root workspace docs when cross-repo understanding changes.
 8. Review root workspace docs for drift:
@@ -51,19 +52,32 @@ npm run build
    - `/home/ubuntu/Documents/logscope-project/context.md`
    - `/home/ubuntu/Documents/logscope-project/integration-annotations.md`
 
-## Remaining supported-beta limits
+## Stable 1.0 Regression Matrix
+
+Use this matrix to confirm the stable `1.0` cut did not regress the supported SDK contract:
+
+| Area                                 | Expected stable behavior                                                                                                                                           | Primary evidence                                                                                                            |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| Root client surface                  | Root package exposes `Logscope`; root package no longer exposes `createLogscopeClient`; root client accepts `ingestionBaseUrl` and emits fallback source `unknown` | `src/index.test.ts`, `src/logscope.test.ts`, `src/config/config-guards.test.ts`                                             |
+| Manual filtering and console capture | `logFilter.levels` still filters before batching; console capture remains opt-in and preserves original console behavior                                           | `src/client/create-logscope-client.test.ts`, `src/console/capture-console.test.ts`, `src/pipeline/pipeline-ingress.test.ts` |
+| Pino transport                       | `@logscopeai/logscope/pino` remains published; transport `endpoint` and `source` stay required; level mapping stays deterministic                                  | `src/pino.test.ts`, `src/pino/transport.test.ts`, `src/pino/map-pino-level.test.ts`                                         |
+| Winston transport                    | `@logscopeai/logscope/winston` remains published; transport `endpoint` and `source` stay required; level mapping stays deterministic                               | `src/winston.test.ts`, `src/winston/transport.test.ts`, `src/winston/map-winston-level.test.ts`                             |
+| Delivery contract                    | SDK still sends `POST /api/logs/ingest` with `x-api-key`; `202/400/413/401/429/500` remain classified per contract                                                 | `src/transport/send-ingestion-request.test.ts`, `src/pipeline/delivery-runner.test.ts`                                      |
+| Local topology guidance              | SDK docs distinguish standalone ingestion on `:3000` from integrated Core + Ingestion local runs on `:3001`                                                        | `docs/local-development.md`                                                                                                 |
+
+## Remaining Stable 1.0 Limits
 
 These limits should stay explicit in release notes and docs closure:
 
-- supported beta is not GA;
+- stable `1.0` SDK contract does not imply a hosted-service SLA;
 - no disk persistence or local buffering;
 - no semantic API-key validation inside the SDK itself;
 - no OpenTelemetry, tracing, or sampling surface;
 - pino and winston remain explicit transports rather than global patches;
-- cross-repo local-default cleanup outside this repository may still require deliberate override
+- cross-repo local-topology cleanup outside this repository may still require deliberate override
   care.
 
-## Closure expectation
+## Closure Expectation
 
 Release closure is complete only when:
 

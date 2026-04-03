@@ -2,7 +2,7 @@
 
 Rules for contributors working on **`@logscopeai/logscope`**.
 
-This repository owns the supported-beta Node.js SDK for sending application logs to the Logscope
+This repository owns the stable `1.0` Node.js SDK for sending application logs to the Logscope
 Ingestion API. Keep contributor workflow and tracking aligned with the shared workspace governance
 model.
 
@@ -11,7 +11,7 @@ model.
 - Package: `@logscopeai/logscope`
 - Runtime: Node.js
 - Language: TypeScript
-- Status: Supported beta
+- Status: Stable `1.0`
 - Role: Client SDK that sends logs to Logscope Ingestion API
 
 The authoritative behavioral reference is `logscope-spec.md`.
@@ -71,7 +71,7 @@ The authoritative behavioral reference is `logscope-spec.md`.
 - Explicit over implicit.
 - No hidden global side effects.
 - No synchronous I/O.
-- No disk persistence in the current supported-beta phase.
+- No disk persistence in the current stable `1.0` phase.
 - Fail silently and safely.
 
 ---

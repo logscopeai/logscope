@@ -5,15 +5,12 @@ import { DEFAULT_RETRY_POLICY } from '../retry/retry-policy';
 import { MAX_BATCH_SIZE } from '../pipeline/pipeline';
 import type { IngestionRequestResult } from '../transport/transport-types';
 import type { FetchLike } from '../transport/transport-types';
-import type { IngestionLogEntry, LogscopeConfig } from '../types';
+import type { IngestionLogEntry, LogscopeClient, LogscopeConfig } from '../types';
 import { describe, expect, it, vi } from 'vitest';
 
 const baseConfig: LogscopeConfig = {
   apiKey: 'test-api-key',
   ingestionBaseUrl: 'http://localhost:3000',
-  context: {
-    source: 'billing-api',
-  },
 };
 
 const fixedDate = new Date('2026-02-14T20:00:00.000Z');
@@ -46,7 +43,7 @@ interface PipelineInput {
 }
 
 describe('createLogscopeClientInternal', () => {
-  it('normalizes and enqueues logs, propagating ingestionBaseUrl/apiKey/source', () => {
+  it('normalizes and enqueues logs, propagating ingestionBaseUrl and apiKey', () => {
     const enqueuedLogs: IngestionLogEntry[] = [];
     const enqueue = vi.fn((log: IngestionLogEntry) => {
       enqueuedLogs.push(log);
@@ -93,7 +90,7 @@ describe('createLogscopeClientInternal', () => {
 
     invocations.forEach((invocation, index) => {
       expect(enqueuedLogs[index]).toEqual({
-        source: 'billing-api',
+        source: 'unknown',
         level: invocation.level,
         timestamp: '2026-02-14T20:00:00.000Z',
         message: invocation.message,
@@ -184,7 +181,7 @@ describe('createLogscopeClientInternal', () => {
     }
   });
 
-  it('uses fallback source when context.source is omitted', () => {
+  it('uses fallback source for root-client logs', () => {
     const enqueuedLogs: IngestionLogEntry[] = [];
     const enqueue = vi.fn((log: IngestionLogEntry) => {
       enqueuedLogs.push(log);
@@ -220,6 +217,45 @@ describe('createLogscopeClientInternal', () => {
       timestamp: '2026-02-14T20:00:00.000Z',
       message: 'message-with-fallback-source',
     });
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('ignores deprecated endpoint and context.source on root-client config', () => {
+    const enqueuedLogs: IngestionLogEntry[] = [];
+    const enqueue = vi.fn((log: IngestionLogEntry) => {
+      enqueuedLogs.push(log);
+    });
+    const createPipeline = vi.fn((input: PipelineInput) => {
+      expect(input.ingestionBaseUrl).toBe(DEFAULT_INGESTION_BASE_URL);
+
+      return {
+        enqueue,
+        flushNow: vi.fn().mockResolvedValue(undefined),
+        stop: vi.fn().mockResolvedValue(undefined),
+      };
+    });
+    const warn = vi.fn();
+
+    const client = createLogscopeClientInternal(
+      {
+        apiKey: 'test-api-key',
+        endpoint: 'http://localhost:3000',
+        context: {
+          source: 'billing-api',
+        },
+      } as unknown as LogscopeConfig,
+      {
+        createPipeline,
+        warn,
+        now: () => fixedDate,
+      },
+    );
+
+    client.info('legacy root config');
+
+    expect(createPipeline).toHaveBeenCalledTimes(1);
+    expect(enqueue).toHaveBeenCalledTimes(1);
+    expect(enqueuedLogs[0]?.source).toBe('unknown');
     expect(warn).not.toHaveBeenCalled();
   });
 
@@ -443,7 +479,7 @@ describe('createLogscopeClientInternal', () => {
     expect(enqueue).toHaveBeenCalledTimes(1);
     expect(enqueuedLogs).toEqual([
       {
-        source: 'billing-api',
+        source: 'unknown',
         level: 'error',
         timestamp: '2026-02-14T20:00:00.000Z',
         message: 'captured console error',
@@ -617,7 +653,6 @@ describe('createLogscopeClientInternal', () => {
       apiKey: '',
       ingestionBaseUrl: '',
       captureConsole: true,
-      context: {},
     } as unknown as LogscopeConfig;
 
     const client = createLogscopeClientInternal(malformedConfig, {
@@ -650,7 +685,6 @@ describe('createLogscopeClientInternal', () => {
     const malformedConfig = {
       apiKey: '',
       ingestionBaseUrl: '',
-      context: {},
     } as unknown as LogscopeConfig;
 
     expect(() => {

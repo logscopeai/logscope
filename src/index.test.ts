@@ -1,20 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import {
-  Logscope,
-  createLogscopeClient,
-  normalizeLog,
-  type LogscopeClient,
-  type LogscopeConfig,
-} from './index';
+import * as rootExports from './index';
+import { Logscope, normalizeLog, type LogscopeClient, type LogscopeInitConfig } from './index';
 import { describe, expect, it } from 'vitest';
 
 describe('root sdk entrypoint', () => {
   it('imports and creates the root sdk client', () => {
-    const config: LogscopeConfig = {
+    const config: LogscopeInitConfig = {
       apiKey: 'api-key',
     };
-    const client: LogscopeClient = createLogscopeClient(config);
+    const client: LogscopeClient = new Logscope(config);
 
     expect(client).toHaveProperty('trace');
     expect(client).toHaveProperty('debug');
@@ -31,6 +26,10 @@ describe('root sdk entrypoint', () => {
       client.error('error');
       client.fatal('fatal');
     }).not.toThrow();
+  });
+
+  it('does not expose the deprecated root factory from the package entrypoint', () => {
+    expect(rootExports).not.toHaveProperty('createLogscopeClient');
   });
 
   it('exports the normalizeLog utility from the root entrypoint', () => {

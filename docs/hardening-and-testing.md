@@ -1,6 +1,6 @@
 # Hardening and Test Matrix
 
-This document records how `@logscopeai/logscope` satisfies its supported-beta hardening goals and
+This document records how `@logscopeai/logscope` satisfies its stable `1.0` hardening goals and
 test coverage expectations from spec section 12.
 
 ## Runtime hardening summary
@@ -59,7 +59,7 @@ Coverage thresholds are enforced in `vitest.config.ts`:
 - functions: `91`
 - branches: `91`
 
-For the broader supported-beta release checklist, see `docs/release-verification.md`.
+For the broader stable `1.0` release checklist, see `docs/release-verification.md`.
 
 ## Local development (`npm link`)
 
@@ -79,7 +79,7 @@ See `docs/local-development.md` for the canonical SDK-side local endpoint and ow
 
 ## Known limitations and non-goals
 
-- Supported beta, not GA.
+- Stable `1.0` SDK contract, not a hosted-service SLA promise.
 - No disk persistence or buffering.
 - No API key semantic validation against server.
 - No storage, analytics, dashboard, or querying capabilities.
