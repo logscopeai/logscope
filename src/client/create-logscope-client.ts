@@ -86,7 +86,7 @@ export const createLogscopeClientInternal = (
   let hasWarnedRetryExhausted = false;
 
   if (!guardedConfig.isValid) {
-    runSafeWarn(dependencies.warn, buildInvalidClientConfigWarning(guardedConfig.invalidFields));
+    runSafeWarn(dependencies.warn, buildInvalidClientConfigWarning(guardedConfig));
   }
 
   const pipeline = (() => {

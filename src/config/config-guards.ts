@@ -5,11 +5,12 @@ import {
   type RuntimeQuantityOverrides,
 } from './runtime-config';
 import { DEFAULT_INGESTION_BASE_URL, LOG_LEVELS, SAFE_FALLBACK_SOURCE } from '../constants';
+import { resolveIngestionBaseUrl } from './ingestion-base-url';
 import type { LogFilterConfig, LogLevel } from '../types';
 
 type RecordValue = Record<string, unknown>;
 
-type ClientRequiredField = 'apiKey';
+type ClientInvalidField = 'apiKey' | 'ingestionBaseUrl';
 type PinoRequiredField = 'apiKey' | 'endpoint' | 'source';
 type WinstonRequiredField = 'apiKey' | 'endpoint' | 'source';
 
@@ -24,7 +25,8 @@ export interface ClientConfigGuardResult extends GuardResult {
   captureConsole: boolean;
   logFilter?: LogFilterConfig;
   runtimeConfig: ResolvedRuntimeConfig;
-  invalidFields: ReadonlyArray<ClientRequiredField>;
+  invalidFields: ReadonlyArray<ClientInvalidField>;
+  invalidIngestionBaseUrlMessage?: string;
 }
 
 export interface PinoOptionsGuardResult extends GuardResult {
@@ -61,6 +63,10 @@ const safeGetProperty = (value: unknown, key: string): unknown => {
   } catch {
     return undefined;
   }
+};
+
+const hasOwnProperty = (value: unknown, key: string): boolean => {
+  return isRecord(value) && Object.prototype.hasOwnProperty.call(value, key);
 };
 
 const isNonEmptyString = (value: unknown): value is string => {
@@ -116,11 +122,21 @@ const normalizeRuntimeOverrides = (value: unknown): RuntimeQuantityOverrides | u
 };
 
 export const buildInvalidClientConfigWarning = (
-  invalidFields: ReadonlyArray<ClientRequiredField>,
+  input: Pick<ClientConfigGuardResult, 'invalidFields' | 'invalidIngestionBaseUrlMessage'>,
 ): string => {
-  return `[logscope] Invalid client configuration. SDK fallback mode enabled. Missing or invalid required field(s): ${invalidFields.join(
-    ', ',
-  )}.`;
+  const warningParts: string[] = [];
+
+  if (input.invalidFields.includes('apiKey')) {
+    warningParts.push('Missing or invalid required field(s): apiKey.');
+  }
+
+  if (input.invalidIngestionBaseUrlMessage !== undefined) {
+    warningParts.push(input.invalidIngestionBaseUrlMessage);
+  }
+
+  return `[logscope] Invalid client configuration. SDK fallback mode enabled.${
+    warningParts.length > 0 ? ` ${warningParts.join(' ')}` : ''
+  }`;
 };
 
 export const buildInvalidPinoOptionsWarning = (
@@ -142,30 +158,39 @@ export const buildInvalidWinstonOptionsWarning = (
 export const guardLogscopeClientConfig = (config: unknown): ClientConfigGuardResult => {
   const apiKey = safeGetProperty(config, 'apiKey');
   const ingestionBaseUrlCandidate = safeGetProperty(config, 'ingestionBaseUrl');
-  const ingestionBaseUrl = isNonEmptyString(ingestionBaseUrlCandidate)
-    ? ingestionBaseUrlCandidate
-    : DEFAULT_INGESTION_BASE_URL;
+  const ingestionBaseUrlResolution = resolveIngestionBaseUrl({
+    configValue: ingestionBaseUrlCandidate,
+    hasConfigValue:
+      hasOwnProperty(config, 'ingestionBaseUrl') && ingestionBaseUrlCandidate !== undefined,
+  });
   const captureConsole = safeGetProperty(config, 'captureConsole') === true;
   const logFilter = normalizeLogFilter(safeGetProperty(config, 'logFilter'));
   const runtimeConfig = resolveRuntimeConfig(
     normalizeRuntimeOverrides(safeGetProperty(config, 'runtime')),
   );
 
-  const invalidFields: ClientRequiredField[] = [];
+  const invalidFields: ClientInvalidField[] = [];
 
   if (!isNonEmptyString(apiKey)) {
     invalidFields.push('apiKey');
   }
 
+  if (!ingestionBaseUrlResolution.isValid) {
+    invalidFields.push('ingestionBaseUrl');
+  }
+
   return {
     isValid: invalidFields.length === 0,
     apiKey: isNonEmptyString(apiKey) ? apiKey : '',
-    ingestionBaseUrl,
+    ingestionBaseUrl: ingestionBaseUrlResolution.isValid
+      ? ingestionBaseUrlResolution.ingestionBaseUrl
+      : DEFAULT_INGESTION_BASE_URL,
     source: SAFE_FALLBACK_SOURCE,
     captureConsole,
     logFilter,
     runtimeConfig,
     invalidFields,
+    invalidIngestionBaseUrlMessage: ingestionBaseUrlResolution.errorMessage,
   };
 };
 
