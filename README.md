@@ -67,23 +67,41 @@ logscope.info('Service started');
 logscope.error('Payment failed', { orderId: 123 });
 ```
 
-`new Logscope({ apiKey })` currently uses this default ingestion URL:
-
-```text
-https://dev.ingestion.logscopeai.com
-```
-
-The planned production ingestion URL is:
+`new Logscope({ apiKey })` uses this default ingestion URL:
 
 ```text
 https://ingestion.logscopeai.com
 ```
 
-For local or test environments, override `ingestionBaseUrl` explicitly:
+For development or local validation, override `ingestionBaseUrl` explicitly:
 
 ```ts
 const logscope = new Logscope({
   apiKey: process.env.LOGSCOPE_API_KEY!,
+  ingestionBaseUrl: 'https://dev.ingestion.logscopeai.com',
+});
+```
+
+```ts
+const logscope = new Logscope({
+  apiKey: process.env.LOGSCOPE_API_KEY!,
+  ingestionBaseUrl: 'http://localhost:3000',
+});
+```
+
+If `ingestionBaseUrl` is omitted, the SDK also honors `LOGSCOPE_INGESTION_URL` before falling
+back to the production default:
+
+```bash
+LOGSCOPE_INGESTION_URL=http://localhost:3000 node app.js
+```
+
+For example:
+
+```ts
+const logscope = new Logscope({
+  apiKey: process.env.LOGSCOPE_API_KEY!,
+  // `ingestionBaseUrl` remains the stable root-client override field.
   ingestionBaseUrl: 'http://localhost:3000',
 });
 ```
@@ -104,6 +122,8 @@ Client config highlights:
 - `apiKey` is required.
 - `ingestionBaseUrl` is the canonical root-client override for local, development, and test
   routing.
+- `LOGSCOPE_INGESTION_URL` is the optional environment fallback when `ingestionBaseUrl` is
+  omitted.
 - `captureConsole` is opt-in and disabled by default.
 - Root-client logs always use the deterministic fallback source `unknown`.
 - `runtime` controls batching and retry quantities through validated safe defaults.
@@ -127,11 +147,14 @@ Invalid runtime overrides are ignored safely and fallback to defaults without th
 Runtime guards are applied before delivery:
 
 - Required config fields are validated before pipeline creation.
-- Invalid required config triggers a safe warning and switches the client or transport into no-op
-  fallback behavior.
+- Invalid required config or invalid root-client endpoint input triggers a safe warning and
+  switches the client or transport into no-op fallback behavior.
 - Warning diagnostics never include secret values such as API keys.
-- `ingestionBaseUrl` is optional on the root client and falls back to the current default when
-  omitted or invalid.
+- Root-client endpoint resolution order is `ingestionBaseUrl`, then `LOGSCOPE_INGESTION_URL`,
+  then `https://ingestion.logscopeai.com`.
+- Root-client endpoint validation accepts only `https://*.logscopeai.com`,
+  `http://localhost:<port>`, and `http://127.0.0.1:<port>`.
+- Invalid endpoint overrides do not silently reroute to production.
 - The SDK does not expose a client-owned `environment` routing field.
 
 Normalization enforces ingestion constraints:

@@ -53,7 +53,7 @@ Use this integrated topology when you need the full local workspace flow, such a
 
 ## Root Client Local Override
 
-The root SDK client currently defaults to `https://dev.ingestion.logscopeai.com`. Override
+The root SDK client defaults to `https://ingestion.logscopeai.com`. Override
 `ingestionBaseUrl` explicitly with the target from the matrix above:
 
 ```ts
@@ -67,6 +67,9 @@ const logscope = new Logscope({
 
 `ingestionBaseUrl` is the only root-client URL override. Root-client source input is not
 configurable.
+
+If you prefer environment-based local switching, `LOGSCOPE_INGESTION_URL` is honored when
+`ingestionBaseUrl` is omitted. Invalid local overrides do not silently fall back to production.
 
 ## Pino And Winston Local Overrides
 

@@ -36,7 +36,10 @@ npm run build
    - package name remains `@logscopeai/logscope`;
    - root package export remains available;
    - `./pino` and `./winston` subpath exports remain published;
-   - root client default ingestion URL remains `https://dev.ingestion.logscopeai.com`;
+   - root client default ingestion URL remains `https://ingestion.logscopeai.com`;
+   - root client resolves `ingestionBaseUrl`, then `LOGSCOPE_INGESTION_URL`, then the production
+     default;
+   - invalid root-client endpoint overrides warn and no-op instead of silently rerouting;
    - local SDK docs distinguish standalone target `http://localhost:3000` from integrated
      workspace target `http://localhost:3001`.
 7. If the release changes a documented contract surface, update:
@@ -56,14 +59,14 @@ npm run build
 
 Use this matrix to confirm the stable `1.0` cut did not regress the supported SDK contract:
 
-| Area                                 | Expected stable behavior                                                                                                                                           | Primary evidence                                                                                                            |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| Root client surface                  | Root package exposes `Logscope`; root package no longer exposes `createLogscopeClient`; root client accepts `ingestionBaseUrl` and emits fallback source `unknown` | `src/index.test.ts`, `src/logscope.test.ts`, `src/config/config-guards.test.ts`                                             |
-| Manual filtering and console capture | `logFilter.levels` still filters before batching; console capture remains opt-in and preserves original console behavior                                           | `src/client/create-logscope-client.test.ts`, `src/console/capture-console.test.ts`, `src/pipeline/pipeline-ingress.test.ts` |
-| Pino transport                       | `@logscopeai/logscope/pino` remains published; transport `endpoint` and `source` stay required; level mapping stays deterministic                                  | `src/pino.test.ts`, `src/pino/transport.test.ts`, `src/pino/map-pino-level.test.ts`                                         |
-| Winston transport                    | `@logscopeai/logscope/winston` remains published; transport `endpoint` and `source` stay required; level mapping stays deterministic                               | `src/winston.test.ts`, `src/winston/transport.test.ts`, `src/winston/map-winston-level.test.ts`                             |
-| Delivery contract                    | SDK still sends `POST /api/logs/ingest` with `x-api-key`; `202/400/413/401/429/500` remain classified per contract                                                 | `src/transport/send-ingestion-request.test.ts`, `src/pipeline/delivery-runner.test.ts`                                      |
-| Local topology guidance              | SDK docs distinguish standalone ingestion on `:3000` from integrated Core + Ingestion local runs on `:3001`                                                        | `docs/local-development.md`                                                                                                 |
+| Area                                 | Expected stable behavior                                                                                                                                                                                                     | Primary evidence                                                                                                            |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Root client surface                  | Root package exposes `Logscope`; root package no longer exposes `createLogscopeClient`; root client accepts `ingestionBaseUrl`, honors `LOGSCOPE_INGESTION_URL`, defaults to production, and emits fallback source `unknown` | `src/index.test.ts`, `src/logscope.test.ts`, `src/config/config-guards.test.ts`                                             |
+| Manual filtering and console capture | `logFilter.levels` still filters before batching; console capture remains opt-in and preserves original console behavior                                                                                                     | `src/client/create-logscope-client.test.ts`, `src/console/capture-console.test.ts`, `src/pipeline/pipeline-ingress.test.ts` |
+| Pino transport                       | `@logscopeai/logscope/pino` remains published; transport `endpoint` and `source` stay required; level mapping stays deterministic                                                                                            | `src/pino.test.ts`, `src/pino/transport.test.ts`, `src/pino/map-pino-level.test.ts`                                         |
+| Winston transport                    | `@logscopeai/logscope/winston` remains published; transport `endpoint` and `source` stay required; level mapping stays deterministic                                                                                         | `src/winston.test.ts`, `src/winston/transport.test.ts`, `src/winston/map-winston-level.test.ts`                             |
+| Delivery contract                    | SDK still sends `POST /api/logs/ingest` with `x-api-key`; `202/400/413/401/429/500` remain classified per contract                                                                                                           | `src/transport/send-ingestion-request.test.ts`, `src/pipeline/delivery-runner.test.ts`                                      |
+| Local topology guidance              | SDK docs distinguish standalone ingestion on `:3000` from integrated Core + Ingestion local runs on `:3001`                                                                                                                  | `docs/local-development.md`                                                                                                 |
 
 ## Remaining Stable 1.0 Limits
 

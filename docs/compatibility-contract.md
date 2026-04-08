@@ -48,10 +48,12 @@ Stable `1.0` root behavior:
   - `maxRetries`: `3`
   - `retryBaseDelayMs`: `250`
   - `retryMaxDelayMs`: `2000`
-- `new Logscope({ apiKey })` continues to default to
-  `https://dev.ingestion.logscopeai.com` when no root-client override is provided.
-- The planned production ingestion URL remains `https://ingestion.logscopeai.com`, but it is not
-  the current SDK default yet.
+- `new Logscope({ apiKey })` defaults to `https://ingestion.logscopeai.com` when no root-client
+  override is provided.
+- Root-client endpoint resolution order is `ingestionBaseUrl`, then `LOGSCOPE_INGESTION_URL`,
+  then the production default.
+- Root-client endpoint validation accepts only `https://*.logscopeai.com`,
+  `http://localhost:<port>`, and `http://127.0.0.1:<port>`.
 - The SDK does not expose a client-owned `environment` routing parameter.
 
 ## Integration contract
@@ -94,7 +96,9 @@ The stable `1.0` fail-safe contract includes:
 - batch size remains bounded by the ingestion contract maximum of `50`;
 - message truncation remains bounded to `2048` characters;
 - metadata remains JSON-safe and is dropped when normalized payload size exceeds `2048` bytes;
-- invalid required configuration falls back safely instead of hard failing into caller code.
+- invalid required configuration falls back safely instead of hard failing into caller code;
+- invalid root-client endpoint overrides warn and switch the client into no-op behavior instead of
+  silently rerouting to another host.
 
 Delivery classification that is compatibility-sensitive:
 
