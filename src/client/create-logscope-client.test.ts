@@ -1,12 +1,12 @@
 import { createLogscopeClient, createLogscopeClientInternal } from './create-logscope-client';
 import { DEFAULT_FLUSH_INTERVAL_MS, DEFAULT_MAX_BATCH_SIZE } from '../config/runtime-config';
-import { DEFAULT_INGESTION_BASE_URL } from '../constants';
+import { DEFAULT_INGESTION_BASE_URL, LOGSCOPE_INGESTION_URL_ENV_VAR } from '../constants';
 import { DEFAULT_RETRY_POLICY } from '../retry/retry-policy';
 import { MAX_BATCH_SIZE } from '../pipeline/pipeline';
 import type { IngestionRequestResult } from '../transport/transport-types';
 import type { FetchLike } from '../transport/transport-types';
 import type { IngestionLogEntry, LogscopeClient, LogscopeConfig } from '../types';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const baseConfig: LogscopeConfig = {
   apiKey: 'test-api-key',
@@ -14,6 +14,10 @@ const baseConfig: LogscopeConfig = {
 };
 
 const fixedDate = new Date('2026-02-14T20:00:00.000Z');
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 const flushAsyncWork = async (): Promise<void> => {
   await Promise.resolve();
@@ -125,6 +129,69 @@ describe('createLogscopeClientInternal', () => {
     );
 
     client.info('message-default-endpoint');
+
+    expect(createPipeline).toHaveBeenCalledTimes(1);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('uses LOGSCOPE_INGESTION_URL when ingestionBaseUrl is omitted', () => {
+    vi.stubEnv(LOGSCOPE_INGESTION_URL_ENV_VAR, 'https://dev.ingestion.logscopeai.com/');
+
+    const createPipeline = vi.fn((input: PipelineInput) => {
+      expect(input.ingestionBaseUrl).toBe('https://dev.ingestion.logscopeai.com');
+
+      return {
+        enqueue: vi.fn(),
+        flushNow: vi.fn().mockResolvedValue(undefined),
+        stop: vi.fn().mockResolvedValue(undefined),
+      };
+    });
+    const warn = vi.fn();
+
+    const client = createLogscopeClientInternal(
+      {
+        apiKey: 'test-api-key',
+      },
+      {
+        createPipeline,
+        warn,
+        now: () => fixedDate,
+      },
+    );
+
+    client.info('message-env-endpoint');
+
+    expect(createPipeline).toHaveBeenCalledTimes(1);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('prefers ingestionBaseUrl over LOGSCOPE_INGESTION_URL', () => {
+    vi.stubEnv(LOGSCOPE_INGESTION_URL_ENV_VAR, 'https://dev.ingestion.logscopeai.com');
+
+    const createPipeline = vi.fn((input: PipelineInput) => {
+      expect(input.ingestionBaseUrl).toBe('http://localhost:3001');
+
+      return {
+        enqueue: vi.fn(),
+        flushNow: vi.fn().mockResolvedValue(undefined),
+        stop: vi.fn().mockResolvedValue(undefined),
+      };
+    });
+    const warn = vi.fn();
+
+    const client = createLogscopeClientInternal(
+      {
+        apiKey: 'test-api-key',
+        ingestionBaseUrl: 'http://localhost:3001/',
+      },
+      {
+        createPipeline,
+        warn,
+        now: () => fixedDate,
+      },
+    );
+
+    client.info('message-config-wins');
 
     expect(createPipeline).toHaveBeenCalledTimes(1);
     expect(warn).not.toHaveBeenCalled();
@@ -637,6 +704,64 @@ describe('createLogscopeClientInternal', () => {
     expect(warn.mock.calls[0]?.[0]).toContain('[logscope]');
     expect(warn.mock.calls[0]?.[0]).toContain('max retry attempts');
     expect(warn.mock.calls[0]?.[0]).not.toContain(baseConfig.apiKey);
+  });
+
+  it('fails safely when ingestionBaseUrl uses an untrusted domain', () => {
+    const createPipeline = vi.fn(() => {
+      return {
+        enqueue: vi.fn(),
+        flushNow: vi.fn().mockResolvedValue(undefined),
+        stop: vi.fn().mockResolvedValue(undefined),
+      };
+    });
+    const warn = vi.fn();
+
+    const client = createLogscopeClientInternal(
+      {
+        apiKey: 'test-api-key',
+        ingestionBaseUrl: 'https://some-other-logging-service.com',
+      },
+      {
+        createPipeline,
+        warn,
+        now: () => fixedDate,
+      },
+    );
+
+    expect(() => client.info('message')).not.toThrow();
+    expect(createPipeline).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]?.[0]).toContain('ingestionBaseUrl');
+    expect(warn.mock.calls[0]?.[0]).toContain('official Logscope SDK');
+  });
+
+  it('fails safely when LOGSCOPE_INGESTION_URL is invalid', () => {
+    vi.stubEnv(LOGSCOPE_INGESTION_URL_ENV_VAR, 'https://example.com');
+
+    const createPipeline = vi.fn(() => {
+      return {
+        enqueue: vi.fn(),
+        flushNow: vi.fn().mockResolvedValue(undefined),
+        stop: vi.fn().mockResolvedValue(undefined),
+      };
+    });
+    const warn = vi.fn();
+
+    const client = createLogscopeClientInternal(
+      {
+        apiKey: 'test-api-key',
+      },
+      {
+        createPipeline,
+        warn,
+        now: () => fixedDate,
+      },
+    );
+
+    expect(() => client.info('message')).not.toThrow();
+    expect(createPipeline).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]?.[0]).toContain(LOGSCOPE_INGESTION_URL_ENV_VAR);
   });
 
   it('falls back safely when required config fields are missing or invalid', () => {

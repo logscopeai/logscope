@@ -1,9 +1,13 @@
-import { DEFAULT_INGESTION_BASE_URL, SAFE_FALLBACK_SOURCE } from './constants';
+import {
+  DEFAULT_INGESTION_BASE_URL,
+  LOGSCOPE_INGESTION_URL_ENV_VAR,
+  SAFE_FALLBACK_SOURCE,
+} from './constants';
 import { Logscope } from './logscope';
 import { MAX_BATCH_SIZE } from './pipeline/pipeline';
 import type { FetchLike } from './transport/transport-types';
 import type { LogscopeInitConfig } from './types';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const flushAsyncWork = async (): Promise<void> => {
   await Promise.resolve();
@@ -17,8 +21,12 @@ const emitBatch = (logscope: Logscope): void => {
   }
 };
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe('Logscope', () => {
-  it('uses the current default ingestion base URL by default', async () => {
+  it('uses the production ingestion base URL by default', async () => {
     const fetchMock: FetchLike = vi.fn().mockResolvedValue({
       status: 202,
     });
@@ -50,6 +58,35 @@ describe('Logscope', () => {
     }
   });
 
+  it('uses LOGSCOPE_INGESTION_URL when the root config omits ingestionBaseUrl', async () => {
+    vi.stubEnv(LOGSCOPE_INGESTION_URL_ENV_VAR, 'https://dev.ingestion.logscopeai.com/');
+
+    const fetchMock: FetchLike = vi.fn().mockResolvedValue({
+      status: 202,
+    });
+    const originalFetch = globalThis.fetch;
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    try {
+      const logscope = new Logscope({
+        apiKey: 'test-api-key',
+      });
+
+      emitBatch(logscope);
+      await flushAsyncWork();
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock.mock.calls[0]?.[0]).toBe(
+        'https://dev.ingestion.logscopeai.com/api/logs/ingest',
+      );
+    } finally {
+      logSpy.mockRestore();
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('uses ingestionBaseUrl override when provided', async () => {
     const fetchMock: FetchLike = vi.fn().mockResolvedValue({
       status: 202,
@@ -62,7 +99,7 @@ describe('Logscope', () => {
     try {
       const logscope = new Logscope({
         apiKey: 'test-api-key',
-        ingestionBaseUrl: 'http://localhost:3000',
+        ingestionBaseUrl: 'http://localhost:3000/',
       });
 
       emitBatch(logscope);
@@ -102,12 +139,13 @@ describe('Logscope', () => {
     }
   });
 
-  it('ignores deprecated endpoint when ingestionBaseUrl is whitespace-only', async () => {
+  it('does not silently fall back when ingestionBaseUrl is whitespace-only', async () => {
     const fetchMock: FetchLike = vi.fn().mockResolvedValue({
       status: 202,
     });
     const originalFetch = globalThis.fetch;
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
@@ -115,15 +153,46 @@ describe('Logscope', () => {
       const logscope = new Logscope({
         apiKey: 'test-api-key',
         ingestionBaseUrl: '   ',
-        endpoint: 'http://localhost:3000',
-      } as unknown as LogscopeInitConfig);
+      });
 
       emitBatch(logscope);
       await flushAsyncWork();
 
-      expect(fetchMock).toHaveBeenCalledTimes(1);
-      expect(fetchMock.mock.calls[0]?.[0]).toBe(`${DEFAULT_INGESTION_BASE_URL}/api/logs/ingest`);
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0]?.[0]).toContain('ingestionBaseUrl');
     } finally {
+      warnSpy.mockRestore();
+      logSpy.mockRestore();
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('does not silently fall back when the environment override is invalid', async () => {
+    vi.stubEnv(LOGSCOPE_INGESTION_URL_ENV_VAR, 'https://example.com');
+
+    const fetchMock: FetchLike = vi.fn().mockResolvedValue({
+      status: 202,
+    });
+    const originalFetch = globalThis.fetch;
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    try {
+      const logscope = new Logscope({
+        apiKey: 'test-api-key',
+      });
+
+      emitBatch(logscope);
+      await flushAsyncWork();
+
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0]?.[0]).toContain(LOGSCOPE_INGESTION_URL_ENV_VAR);
+    } finally {
+      warnSpy.mockRestore();
       logSpy.mockRestore();
       globalThis.fetch = originalFetch;
     }

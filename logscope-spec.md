@@ -91,8 +91,15 @@ interface LogscopeConfig {
 
 Rules:
 
-- SDK initialization is runtime-config based and must not require direct environment-variable readers inside the package.
-- If `ingestionBaseUrl` is omitted, SDK uses the current default `https://dev.ingestion.logscopeai.com`.
+- SDK initialization is runtime-config based. `ingestionBaseUrl` remains the primary root-client
+  override field.
+- SDK may optionally read `LOGSCOPE_INGESTION_URL` when `ingestionBaseUrl` is omitted, but
+  environment-variable usage is not required for integrations.
+- If `ingestionBaseUrl` is omitted and `LOGSCOPE_INGESTION_URL` is unset, SDK defaults to
+  `https://ingestion.logscopeai.com`.
+- Root-client endpoint validation accepts only `https://*.logscopeai.com`,
+  `http://localhost:<port>`, and `http://127.0.0.1:<port>`.
+- Invalid root-client endpoint input must not silently fall back to another host.
 - SDK must not expose a client-owned `environment` routing parameter.
 - Environment/application/organization ownership is resolved server-side from API key scope.
 
