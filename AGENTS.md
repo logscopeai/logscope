@@ -64,6 +64,30 @@ The authoritative behavioral reference is `logscope-spec.md`.
 
 15. **For substantial work handoffs, explicitly state whether the root workspace docs were reviewed and whether updates were made or were not needed.**
 
+### Agent Commit Rules
+
+When an AI agent is asked to implement a phase or feature, it must create multiple focused commits instead of one milestone-sized commit whenever the work includes more than one layer or concern.
+
+The agent should announce the intended commit breakdown before committing.
+
+Examples of acceptable commit boundaries:
+
+- Configure project tooling.
+- Add Electron shell.
+- Add initial renderer screen.
+- Add domain validation and tests.
+- Update documentation.
+
+A single commit is acceptable only for small changes that affect one concern.
+
+Do not create one large commit for an entire phase, feature, or milestone if it touches multiple concerns.
+
+11. **Pull Requests must be clear and descriptive**
+
+- Titles and descriptions must be written in English.
+- Prefer descriptive and explicit wording, even if verbose.
+- Keep titles neutral and professional (avoid prefixes, tags or stylistic signatures added by tools or agents).
+
 ---
 
 ## Architectural Principles
