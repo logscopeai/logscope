@@ -54,17 +54,11 @@ The authoritative behavioral reference is `logscope-spec.md`.
 
 10. **When requested to perform a git commit make sure to follow the instructions provided in the file `.github/commit-message-instructions.md`**
 
-11. **When finished working on a ticket from the dir `tickets/` make sure to update the status of the ticket in the `tickets/ticket_registry.md` file and the ticket itself (checklist, status, comments, etc.).**
+11. **Prefer one PR per feature, even if multiple tickets are required to complete that feature.**
 
-12. **When finished implementing a feature from an epic, make sure to create a new markdown file in the corresponding directory in `tickets/epics/<<epic>>/<<feature>>/<<feature>>_pr.md` with a suggested PR description and title, both description and title should be descriptive, verbose and accurately reflect the changes made in the development, for tracking purposes please try to include the number of the feature and epic in the generated title of the PR so when checking the PR list anyone can see the relationship.** This rule does not apply to a technical-debt epic if such an exception is explicitly documented.
+12. **For substantial work handoffs, explicitly state whether the root workspace docs were reviewed and whether updates were made or were not needed.**
 
-13. **Expected and preferred ticket structure is as follows:** `tickets/epics/<<epic-name>>/<<feature-name>>/<<ticket-name>>`. Prefer small tickets and granular features. Historical ticket layouts remain valid legacy content, but new work should use feature-grouped organization whenever practical.
-
-14. **Prefer one PR per feature, even if multiple tickets are required to complete that feature.**
-
-15. **For substantial work handoffs, explicitly state whether the root workspace docs were reviewed and whether updates were made or were not needed.**
-
-### Agent Commit Rules
+### Agent Commit and PR Rules
 
 When an AI agent is asked to implement a phase or feature, it must create multiple focused commits instead of one milestone-sized commit whenever the work includes more than one layer or concern.
 
@@ -82,7 +76,7 @@ A single commit is acceptable only for small changes that affect one concern.
 
 Do not create one large commit for an entire phase, feature, or milestone if it touches multiple concerns.
 
-11. **Pull Requests must be clear and descriptive**
+**Pull Requests must be clear and descriptive**
 
 - Titles and descriptions must be written in English.
 - Prefer descriptive and explicit wording, even if verbose.
