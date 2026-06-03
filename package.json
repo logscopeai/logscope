@@ -1,6 +1,6 @@
 {
   "name": "@logscopeai/logscope",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Stable 1.0 Node.js SDK for sending application logs to the Logscope ingestion API.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
