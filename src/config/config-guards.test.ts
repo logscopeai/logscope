@@ -297,8 +297,76 @@ describe('guardPinoTransportOptions', () => {
       logFilter: {
         levels: ['info'],
       },
+      invalidEndpointMessage: undefined,
       invalidFields: [],
     });
+  });
+
+  it('uses the shared default ingestion endpoint when endpoint is omitted', () => {
+    const result = guardPinoTransportOptions({
+      apiKey: 'api-key',
+      source: 'billing-api',
+    });
+
+    expect(result).toEqual({
+      isValid: true,
+      apiKey: 'api-key',
+      endpoint: DEFAULT_INGESTION_BASE_URL,
+      source: 'billing-api',
+      flushIntervalMs: undefined,
+      retryPolicy: undefined,
+      logFilter: undefined,
+      invalidEndpointMessage: undefined,
+      invalidFields: [],
+    });
+  });
+
+  it('uses LOGSCOPE_INGESTION_URL when endpoint is omitted on pino transport', () => {
+    vi.stubEnv(LOGSCOPE_INGESTION_URL_ENV_VAR, 'https://dev.ingestion.logscopeai.com/');
+
+    const result = guardPinoTransportOptions({
+      apiKey: 'api-key',
+      source: 'billing-api',
+    });
+
+    expect(result).toEqual({
+      isValid: true,
+      apiKey: 'api-key',
+      endpoint: 'https://dev.ingestion.logscopeai.com',
+      source: 'billing-api',
+      flushIntervalMs: undefined,
+      retryPolicy: undefined,
+      logFilter: undefined,
+      invalidEndpointMessage: undefined,
+      invalidFields: [],
+    });
+  });
+
+  it('rejects invalid explicit endpoint overrides for pino transport', () => {
+    const result = guardPinoTransportOptions({
+      apiKey: 'api-key',
+      endpoint: 'https://example.com',
+      source: 'billing-api',
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.endpoint).toBe(DEFAULT_INGESTION_BASE_URL);
+    expect(result.invalidFields).toEqual(['endpoint']);
+    expect(result.invalidEndpointMessage).toContain('Invalid endpoint');
+  });
+
+  it('rejects invalid environment overrides for pino transport instead of silently falling back', () => {
+    vi.stubEnv(LOGSCOPE_INGESTION_URL_ENV_VAR, 'https://example.com');
+
+    const result = guardPinoTransportOptions({
+      apiKey: 'api-key',
+      source: 'billing-api',
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.endpoint).toBe(DEFAULT_INGESTION_BASE_URL);
+    expect(result.invalidFields).toEqual(['endpoint']);
+    expect(result.invalidEndpointMessage).toContain(LOGSCOPE_INGESTION_URL_ENV_VAR);
   });
 
   it('falls back safely and reports invalid required fields', () => {
@@ -311,9 +379,10 @@ describe('guardPinoTransportOptions', () => {
 
     expect(result.isValid).toBe(false);
     expect(result.apiKey).toBe('');
-    expect(result.endpoint).toBe('');
+    expect(result.endpoint).toBe(DEFAULT_INGESTION_BASE_URL);
     expect(result.source).toBe('unknown');
     expect(result.retryPolicy).toBeUndefined();
+    expect(result.invalidEndpointMessage).toContain('Invalid endpoint');
     expect(result.invalidFields).toEqual(['apiKey', 'endpoint', 'source']);
   });
 });
@@ -345,8 +414,76 @@ describe('guardWinstonTransportOptions', () => {
       logFilter: {
         levels: ['info'],
       },
+      invalidEndpointMessage: undefined,
       invalidFields: [],
     });
+  });
+
+  it('uses the shared default ingestion endpoint when endpoint is omitted', () => {
+    const result = guardWinstonTransportOptions({
+      apiKey: 'api-key',
+      source: 'billing-api',
+    });
+
+    expect(result).toEqual({
+      isValid: true,
+      apiKey: 'api-key',
+      endpoint: DEFAULT_INGESTION_BASE_URL,
+      source: 'billing-api',
+      flushIntervalMs: undefined,
+      retryPolicy: undefined,
+      logFilter: undefined,
+      invalidEndpointMessage: undefined,
+      invalidFields: [],
+    });
+  });
+
+  it('uses LOGSCOPE_INGESTION_URL when endpoint is omitted on winston transport', () => {
+    vi.stubEnv(LOGSCOPE_INGESTION_URL_ENV_VAR, 'https://dev.ingestion.logscopeai.com/');
+
+    const result = guardWinstonTransportOptions({
+      apiKey: 'api-key',
+      source: 'billing-api',
+    });
+
+    expect(result).toEqual({
+      isValid: true,
+      apiKey: 'api-key',
+      endpoint: 'https://dev.ingestion.logscopeai.com',
+      source: 'billing-api',
+      flushIntervalMs: undefined,
+      retryPolicy: undefined,
+      logFilter: undefined,
+      invalidEndpointMessage: undefined,
+      invalidFields: [],
+    });
+  });
+
+  it('rejects invalid explicit endpoint overrides for winston transport', () => {
+    const result = guardWinstonTransportOptions({
+      apiKey: 'api-key',
+      endpoint: 'https://example.com',
+      source: 'billing-api',
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.endpoint).toBe(DEFAULT_INGESTION_BASE_URL);
+    expect(result.invalidFields).toEqual(['endpoint']);
+    expect(result.invalidEndpointMessage).toContain('Invalid endpoint');
+  });
+
+  it('rejects invalid environment overrides for winston transport instead of silently falling back', () => {
+    vi.stubEnv(LOGSCOPE_INGESTION_URL_ENV_VAR, 'https://example.com');
+
+    const result = guardWinstonTransportOptions({
+      apiKey: 'api-key',
+      source: 'billing-api',
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.endpoint).toBe(DEFAULT_INGESTION_BASE_URL);
+    expect(result.invalidFields).toEqual(['endpoint']);
+    expect(result.invalidEndpointMessage).toContain(LOGSCOPE_INGESTION_URL_ENV_VAR);
   });
 
   it('falls back safely and reports invalid required fields', () => {
@@ -359,9 +496,10 @@ describe('guardWinstonTransportOptions', () => {
 
     expect(result.isValid).toBe(false);
     expect(result.apiKey).toBe('');
-    expect(result.endpoint).toBe('');
+    expect(result.endpoint).toBe(DEFAULT_INGESTION_BASE_URL);
     expect(result.source).toBe('unknown');
     expect(result.retryPolicy).toBeUndefined();
+    expect(result.invalidEndpointMessage).toContain('Invalid endpoint');
     expect(result.invalidFields).toEqual(['apiKey', 'endpoint', 'source']);
   });
 });
@@ -373,8 +511,14 @@ describe('config warning builders', () => {
       invalidIngestionBaseUrlMessage:
         '[logscope] Invalid ingestionBaseUrl. Only trusted endpoints are supported.',
     });
-    const pinoWarning = buildInvalidPinoOptionsWarning(['apiKey', 'source']);
-    const winstonWarning = buildInvalidWinstonOptionsWarning(['apiKey', 'source']);
+    const pinoWarning = buildInvalidPinoOptionsWarning({
+      invalidFields: ['apiKey', 'source'],
+      invalidEndpointMessage: '[logscope] Invalid endpoint. Only trusted endpoints are supported.',
+    });
+    const winstonWarning = buildInvalidWinstonOptionsWarning({
+      invalidFields: ['apiKey', 'source'],
+      invalidEndpointMessage: '[logscope] Invalid endpoint. Only trusted endpoints are supported.',
+    });
 
     expect(clientWarning).toContain('[logscope]');
     expect(pinoWarning).toContain('[logscope]');
@@ -383,6 +527,8 @@ describe('config warning builders', () => {
     expect(clientWarning).toContain('ingestionBaseUrl');
     expect(pinoWarning).toContain('apiKey, source');
     expect(winstonWarning).toContain('apiKey, source');
+    expect(pinoWarning).toContain('Invalid endpoint');
+    expect(winstonWarning).toContain('Invalid endpoint');
     expect(clientWarning).not.toContain('super-secret-key');
     expect(pinoWarning).not.toContain('super-secret-key');
     expect(winstonWarning).not.toContain('super-secret-key');

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import type { Writable } from 'node:stream';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { DEFAULT_INGESTION_BASE_URL, LOGSCOPE_INGESTION_URL_ENV_VAR } from '../constants';
 import type { SendIngestionRequestInput } from '../transport/transport-types';
 import { createWinstonTransportInternal, type LogscopeWinstonTransportOptions } from './transport';
 
@@ -36,6 +37,7 @@ const endTransport = async (transport: Writable): Promise<void> => {
 describe('createWinstonTransportInternal', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it('maps winston logs and applies level filtering before batching', async () => {
@@ -146,6 +148,64 @@ describe('createWinstonTransportInternal', () => {
     expect(sentLogs).toHaveLength(1);
     expect(sentLogs[0]?.message).toBe('timestamp fallback message');
     expect(Date.parse(sentLogs[0]?.timestamp ?? '')).not.toBeNaN();
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('uses the shared default ingestion endpoint when endpoint is omitted', async () => {
+    const sendBatch = vi.fn().mockResolvedValue(createSuccessResult());
+    const warn = vi.fn();
+    const transport = createWinstonTransportInternal(
+      {
+        apiKey: 'test-api-key',
+        source: 'billing-api',
+      },
+      {
+        sendBatch,
+        warn,
+      },
+    );
+
+    transport.write({
+      level: 'info',
+      message: 'default endpoint message',
+      timestamp: '2026-02-15T16:45:00.000Z',
+    });
+    await endTransport(transport);
+
+    expect(sendBatch).toHaveBeenCalledTimes(1);
+    expect((sendBatch.mock.calls[0]?.[0] as SendIngestionRequestInput).endpoint).toBe(
+      DEFAULT_INGESTION_BASE_URL,
+    );
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('uses LOGSCOPE_INGESTION_URL when endpoint is omitted on winston transport', async () => {
+    vi.stubEnv(LOGSCOPE_INGESTION_URL_ENV_VAR, 'https://dev.ingestion.logscopeai.com/');
+
+    const sendBatch = vi.fn().mockResolvedValue(createSuccessResult());
+    const warn = vi.fn();
+    const transport = createWinstonTransportInternal(
+      {
+        apiKey: 'test-api-key',
+        source: 'billing-api',
+      },
+      {
+        sendBatch,
+        warn,
+      },
+    );
+
+    transport.write({
+      level: 'info',
+      message: 'env endpoint message',
+      timestamp: '2026-02-15T16:46:00.000Z',
+    });
+    await endTransport(transport);
+
+    expect(sendBatch).toHaveBeenCalledTimes(1);
+    expect((sendBatch.mock.calls[0]?.[0] as SendIngestionRequestInput).endpoint).toBe(
+      'https://dev.ingestion.logscopeai.com',
+    );
     expect(warn).not.toHaveBeenCalled();
   });
 
@@ -299,6 +359,7 @@ describe('createWinstonTransportInternal', () => {
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0]?.[0]).toContain('endpoint');
     expect(warn.mock.calls[0]?.[0]).toContain('source');
+    expect(warn.mock.calls[0]?.[0]).toContain('Only https://*.logscopeai.com');
     expect(warn.mock.calls[0]?.[0]).not.toContain('super-secret-api-key');
   });
 

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import type { Writable } from 'node:stream';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { DEFAULT_INGESTION_BASE_URL, LOGSCOPE_INGESTION_URL_ENV_VAR } from '../constants';
 import type { SendIngestionRequestInput } from '../transport/transport-types';
 import { createPinoTransportInternal, type LogscopePinoTransportOptions } from './transport';
 
@@ -36,6 +37,7 @@ const endTransport = async (transport: Writable): Promise<void> => {
 describe('createPinoTransportInternal', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it('parses pino logs, maps levels, and applies level filtering before batching', async () => {
@@ -196,6 +198,68 @@ describe('createPinoTransportInternal', () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
+  it('uses the shared default ingestion endpoint when endpoint is omitted', async () => {
+    const sendBatch = vi.fn().mockResolvedValue(createSuccessResult());
+    const warn = vi.fn();
+    const transport = createPinoTransportInternal(
+      {
+        apiKey: 'test-api-key',
+        source: 'billing-api',
+      },
+      {
+        sendBatch,
+        warn,
+      },
+    );
+
+    transport.write(
+      `${JSON.stringify({
+        level: 30,
+        time: '2026-02-15T16:45:00.000Z',
+        msg: 'default endpoint message',
+      })}\n`,
+    );
+    await endTransport(transport);
+
+    expect(sendBatch).toHaveBeenCalledTimes(1);
+    expect((sendBatch.mock.calls[0]?.[0] as SendIngestionRequestInput).endpoint).toBe(
+      DEFAULT_INGESTION_BASE_URL,
+    );
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('uses LOGSCOPE_INGESTION_URL when endpoint is omitted on pino transport', async () => {
+    vi.stubEnv(LOGSCOPE_INGESTION_URL_ENV_VAR, 'https://dev.ingestion.logscopeai.com/');
+
+    const sendBatch = vi.fn().mockResolvedValue(createSuccessResult());
+    const warn = vi.fn();
+    const transport = createPinoTransportInternal(
+      {
+        apiKey: 'test-api-key',
+        source: 'billing-api',
+      },
+      {
+        sendBatch,
+        warn,
+      },
+    );
+
+    transport.write(
+      `${JSON.stringify({
+        level: 30,
+        time: '2026-02-15T16:46:00.000Z',
+        msg: 'env endpoint message',
+      })}\n`,
+    );
+    await endTransport(transport);
+
+    expect(sendBatch).toHaveBeenCalledTimes(1);
+    expect((sendBatch.mock.calls[0]?.[0] as SendIngestionRequestInput).endpoint).toBe(
+      'https://dev.ingestion.logscopeai.com',
+    );
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   it('warns once when multiple unauthorized batch results are received', async () => {
     const sendBatch = vi.fn().mockResolvedValue({
       action: 'unauthorized',
@@ -330,6 +394,7 @@ describe('createPinoTransportInternal', () => {
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0]?.[0]).toContain('endpoint');
     expect(warn.mock.calls[0]?.[0]).toContain('source');
+    expect(warn.mock.calls[0]?.[0]).toContain('Only https://*.logscopeai.com');
     expect(warn.mock.calls[0]?.[0]).not.toContain('super-secret-api-key');
   });
 

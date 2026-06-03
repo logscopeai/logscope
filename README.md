@@ -147,11 +147,13 @@ Invalid runtime overrides are ignored safely and fallback to defaults without th
 Runtime guards are applied before delivery:
 
 - Required config fields are validated before pipeline creation.
-- Invalid required config or invalid root-client endpoint input triggers a safe warning and
+- Invalid required config or invalid root-client/transport endpoint input triggers a safe warning and
   switches the client or transport into no-op fallback behavior.
 - Warning diagnostics never include secret values such as API keys.
 - Root-client endpoint resolution order is `ingestionBaseUrl`, then `LOGSCOPE_INGESTION_URL`,
   then `https://ingestion.logscopeai.com`.
+- Pino and Winston transport endpoint resolution order is `endpoint`, then
+  `LOGSCOPE_INGESTION_URL`, then `https://ingestion.logscopeai.com`.
 - Root-client endpoint validation accepts only `https://*.logscopeai.com`,
   `http://localhost:<port>`, and `http://127.0.0.1:<port>`.
 - Invalid endpoint overrides do not silently reroute to production.
@@ -237,7 +239,6 @@ const logger = pino({
         target: '@logscopeai/logscope/pino',
         options: {
           apiKey: process.env.LOGSCOPE_API_KEY,
-          endpoint: 'http://localhost:3000',
           source: 'billing-api',
         },
       },
@@ -248,7 +249,9 @@ const logger = pino({
 
 Pino transport notes:
 
-- transport option name remains `endpoint`;
+- transport option name remains `endpoint`, but it is now optional;
+- when `endpoint` is omitted, the transport resolves the target exactly like the root client:
+  `LOGSCOPE_INGESTION_URL`, then `https://ingestion.logscopeai.com`;
 - `source` is required on the transport surface;
 - pino levels `10/20/30/40/50/60` map to Logscope levels
   `trace/debug/info/warn/error/fatal`;
@@ -268,7 +271,6 @@ const logger = createLogger({
   transports: [
     createWinstonTransport({
       apiKey: process.env.LOGSCOPE_API_KEY!,
-      endpoint: 'http://localhost:3000',
       source: 'billing-api',
       logFilter: {
         levels: ['warn', 'error'],
@@ -280,7 +282,9 @@ const logger = createLogger({
 
 Winston transport notes:
 
-- transport option name remains `endpoint`;
+- transport option name remains `endpoint`, but it is now optional;
+- when `endpoint` is omitted, the transport resolves the target exactly like the root client:
+  `LOGSCOPE_INGESTION_URL`, then `https://ingestion.logscopeai.com`;
 - `source` is required on the transport surface;
 - default npm levels map to Logscope levels
   `error/warn/info/info/debug/debug/trace`;

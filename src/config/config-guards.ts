@@ -11,8 +11,8 @@ import type { LogFilterConfig, LogLevel } from '../types';
 type RecordValue = Record<string, unknown>;
 
 type ClientInvalidField = 'apiKey' | 'ingestionBaseUrl';
-type PinoRequiredField = 'apiKey' | 'endpoint' | 'source';
-type WinstonRequiredField = 'apiKey' | 'endpoint' | 'source';
+type PinoInvalidField = 'apiKey' | 'endpoint' | 'source';
+type WinstonInvalidField = 'apiKey' | 'endpoint' | 'source';
 
 interface GuardResult {
   isValid: boolean;
@@ -36,7 +36,8 @@ export interface PinoOptionsGuardResult extends GuardResult {
   flushIntervalMs?: number;
   retryPolicy?: Partial<RetryPolicy>;
   logFilter?: LogFilterConfig;
-  invalidFields: ReadonlyArray<PinoRequiredField>;
+  invalidFields: ReadonlyArray<PinoInvalidField>;
+  invalidEndpointMessage?: string;
 }
 
 export interface WinstonOptionsGuardResult extends GuardResult {
@@ -46,7 +47,8 @@ export interface WinstonOptionsGuardResult extends GuardResult {
   flushIntervalMs?: number;
   retryPolicy?: Partial<RetryPolicy>;
   logFilter?: LogFilterConfig;
-  invalidFields: ReadonlyArray<WinstonRequiredField>;
+  invalidFields: ReadonlyArray<WinstonInvalidField>;
+  invalidEndpointMessage?: string;
 }
 
 const isRecord = (value: unknown): value is RecordValue => {
@@ -140,19 +142,31 @@ export const buildInvalidClientConfigWarning = (
 };
 
 export const buildInvalidPinoOptionsWarning = (
-  invalidFields: ReadonlyArray<PinoRequiredField>,
+  input: Pick<PinoOptionsGuardResult, 'invalidFields' | 'invalidEndpointMessage'>,
 ): string => {
-  return `[logscope] Invalid pino transport configuration. SDK fallback mode enabled. Missing or invalid required field(s): ${invalidFields.join(
-    ', ',
-  )}.`;
+  const warningParts = [`Missing or invalid required field(s): ${input.invalidFields.join(', ')}.`];
+
+  if (input.invalidEndpointMessage !== undefined) {
+    warningParts.push(input.invalidEndpointMessage);
+  }
+
+  return `[logscope] Invalid pino transport configuration. SDK fallback mode enabled. ${warningParts.join(
+    ' ',
+  )}`;
 };
 
 export const buildInvalidWinstonOptionsWarning = (
-  invalidFields: ReadonlyArray<WinstonRequiredField>,
+  input: Pick<WinstonOptionsGuardResult, 'invalidFields' | 'invalidEndpointMessage'>,
 ): string => {
-  return `[logscope] Invalid winston transport configuration. SDK fallback mode enabled. Missing or invalid required field(s): ${invalidFields.join(
-    ', ',
-  )}.`;
+  const warningParts = [`Missing or invalid required field(s): ${input.invalidFields.join(', ')}.`];
+
+  if (input.invalidEndpointMessage !== undefined) {
+    warningParts.push(input.invalidEndpointMessage);
+  }
+
+  return `[logscope] Invalid winston transport configuration. SDK fallback mode enabled. ${warningParts.join(
+    ' ',
+  )}`;
 };
 
 export const guardLogscopeClientConfig = (config: unknown): ClientConfigGuardResult => {
@@ -196,19 +210,24 @@ export const guardLogscopeClientConfig = (config: unknown): ClientConfigGuardRes
 
 export const guardPinoTransportOptions = (options: unknown): PinoOptionsGuardResult => {
   const apiKey = safeGetProperty(options, 'apiKey');
-  const endpoint = safeGetProperty(options, 'endpoint');
+  const endpointCandidate = safeGetProperty(options, 'endpoint');
+  const endpointResolution = resolveIngestionBaseUrl({
+    configValue: endpointCandidate,
+    hasConfigValue: hasOwnProperty(options, 'endpoint') && endpointCandidate !== undefined,
+    fieldName: 'endpoint',
+  });
   const source = safeGetProperty(options, 'source');
   const flushIntervalMsValue = safeGetProperty(options, 'flushIntervalMs');
   const retryPolicyValue = safeGetProperty(options, 'retryPolicy');
   const logFilter = normalizeLogFilter(safeGetProperty(options, 'logFilter'));
 
-  const invalidFields: PinoRequiredField[] = [];
+  const invalidFields: PinoInvalidField[] = [];
 
   if (!isNonEmptyString(apiKey)) {
     invalidFields.push('apiKey');
   }
 
-  if (!isNonEmptyString(endpoint)) {
+  if (!endpointResolution.isValid) {
     invalidFields.push('endpoint');
   }
 
@@ -219,30 +238,38 @@ export const guardPinoTransportOptions = (options: unknown): PinoOptionsGuardRes
   return {
     isValid: invalidFields.length === 0,
     apiKey: isNonEmptyString(apiKey) ? apiKey : '',
-    endpoint: isNonEmptyString(endpoint) ? endpoint : '',
+    endpoint: endpointResolution.isValid
+      ? endpointResolution.ingestionBaseUrl
+      : DEFAULT_INGESTION_BASE_URL,
     source: isNonEmptyString(source) ? source : SAFE_FALLBACK_SOURCE,
     flushIntervalMs: typeof flushIntervalMsValue === 'number' ? flushIntervalMsValue : undefined,
     retryPolicy: normalizeRetryPolicy(retryPolicyValue),
     logFilter,
     invalidFields,
+    invalidEndpointMessage: endpointResolution.errorMessage,
   };
 };
 
 export const guardWinstonTransportOptions = (options: unknown): WinstonOptionsGuardResult => {
   const apiKey = safeGetProperty(options, 'apiKey');
-  const endpoint = safeGetProperty(options, 'endpoint');
+  const endpointCandidate = safeGetProperty(options, 'endpoint');
+  const endpointResolution = resolveIngestionBaseUrl({
+    configValue: endpointCandidate,
+    hasConfigValue: hasOwnProperty(options, 'endpoint') && endpointCandidate !== undefined,
+    fieldName: 'endpoint',
+  });
   const source = safeGetProperty(options, 'source');
   const flushIntervalMsValue = safeGetProperty(options, 'flushIntervalMs');
   const retryPolicyValue = safeGetProperty(options, 'retryPolicy');
   const logFilter = normalizeLogFilter(safeGetProperty(options, 'logFilter'));
 
-  const invalidFields: WinstonRequiredField[] = [];
+  const invalidFields: WinstonInvalidField[] = [];
 
   if (!isNonEmptyString(apiKey)) {
     invalidFields.push('apiKey');
   }
 
-  if (!isNonEmptyString(endpoint)) {
+  if (!endpointResolution.isValid) {
     invalidFields.push('endpoint');
   }
 
@@ -253,11 +280,14 @@ export const guardWinstonTransportOptions = (options: unknown): WinstonOptionsGu
   return {
     isValid: invalidFields.length === 0,
     apiKey: isNonEmptyString(apiKey) ? apiKey : '',
-    endpoint: isNonEmptyString(endpoint) ? endpoint : '',
+    endpoint: endpointResolution.isValid
+      ? endpointResolution.ingestionBaseUrl
+      : DEFAULT_INGESTION_BASE_URL,
     source: isNonEmptyString(source) ? source : SAFE_FALLBACK_SOURCE,
     flushIntervalMs: typeof flushIntervalMsValue === 'number' ? flushIntervalMsValue : undefined,
     retryPolicy: normalizeRetryPolicy(retryPolicyValue),
     logFilter,
     invalidFields,
+    invalidEndpointMessage: endpointResolution.errorMessage,
   };
 };

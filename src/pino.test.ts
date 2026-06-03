@@ -3,6 +3,7 @@ import createPinoTransport, {
   type LogscopePinoTransportOptions,
 } from './pino';
 import { describe, expect, it, vi } from 'vitest';
+import { DEFAULT_INGESTION_BASE_URL } from './constants';
 
 describe('pino sdk subpath entrypoint', () => {
   it('exports a working pino transport factory as default and named export', () => {
@@ -32,7 +33,6 @@ describe('pino sdk subpath entrypoint', () => {
     const originalFetch = globalThis.fetch;
     const options: LogscopePinoTransportOptions = {
       apiKey: 'api-key',
-      endpoint: 'http://localhost:3000',
       source: 'unit-test',
       flushIntervalMs: 1,
       retryPolicy: {
@@ -63,6 +63,7 @@ describe('pino sdk subpath entrypoint', () => {
       });
 
       expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock.mock.calls[0]?.[0]).toBe(`${DEFAULT_INGESTION_BASE_URL}/api/logs/ingest`);
       expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(warnSpy.mock.calls[0]?.[0]).toContain('unauthorized');
       expect(warnSpy.mock.calls[0]?.[0]).not.toContain(options.apiKey);

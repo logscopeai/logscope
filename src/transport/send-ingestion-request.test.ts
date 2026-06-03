@@ -115,7 +115,7 @@ describe('sendIngestionRequest', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('logs request endpoint without exposing secrets or emitting warnings/errors', async () => {
+  it('does not emit development request logs or expose secrets during delivery', async () => {
     const fetchMock: FetchLike = vi.fn().mockResolvedValue({ status: 401 });
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -134,10 +134,7 @@ describe('sendIngestionRequest', () => {
       status: 401,
       shouldWarnUnauthorized: true,
     });
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith(
-      '[logscope] Sending logs batch to http://localhost:3000/api/logs/ingest',
-    );
+    expect(logSpy).not.toHaveBeenCalled();
     expect(warnSpy).not.toHaveBeenCalled();
     expect(errorSpy).not.toHaveBeenCalled();
     expect(logSpy.mock.calls.join(' ')).not.toContain('super-secret-key');
