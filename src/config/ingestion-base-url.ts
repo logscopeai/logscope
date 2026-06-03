@@ -5,6 +5,7 @@ type IngestionBaseUrlSource = 'config' | 'environment' | 'default';
 export interface ResolveIngestionBaseUrlInput {
   configValue: unknown;
   hasConfigValue: boolean;
+  fieldName?: string;
   getEnvironmentValue?: (name: string) => string | undefined;
 }
 
@@ -100,8 +101,10 @@ const validateCandidate = (
 export const resolveIngestionBaseUrl = (
   input: ResolveIngestionBaseUrlInput,
 ): ResolvedIngestionBaseUrl => {
+  const fieldName = input.fieldName ?? 'ingestionBaseUrl';
+
   if (input.hasConfigValue) {
-    return validateCandidate(input.configValue, 'config', 'ingestionBaseUrl');
+    return validateCandidate(input.configValue, 'config', fieldName);
   }
 
   const environmentValue = (input.getEnvironmentValue ?? defaultGetEnvironmentValue)(

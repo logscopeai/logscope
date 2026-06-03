@@ -26,7 +26,7 @@ const LEVEL_SYMBOL = Symbol.for('level');
 
 export interface LogscopeWinstonTransportOptions {
   apiKey: string;
-  endpoint: string;
+  endpoint?: string;
   source: string;
   logFilter?: LogFilterConfig;
   flushIntervalMs?: number;
@@ -134,10 +134,7 @@ class LogscopeWinstonTransportStream extends TransportStream {
     let hasWarnedRetryExhausted = false;
 
     if (!guardedOptions.isValid) {
-      runSafeWarn(
-        dependencies.warn,
-        buildInvalidWinstonOptionsWarning(guardedOptions.invalidFields),
-      );
+      runSafeWarn(dependencies.warn, buildInvalidWinstonOptionsWarning(guardedOptions));
     }
 
     const createPipeline = dependencies.createPipeline ?? createBatchingPipeline;

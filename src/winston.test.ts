@@ -5,6 +5,7 @@ import createWinstonTransport, {
   type LogscopeWinstonTransportOptions,
 } from './winston';
 import { describe, expect, it, vi } from 'vitest';
+import { DEFAULT_INGESTION_BASE_URL } from './constants';
 
 const endTransport = async (transport: Writable): Promise<void> => {
   await new Promise<void>((resolve, reject) => {
@@ -43,7 +44,6 @@ describe('winston sdk subpath entrypoint', () => {
     const originalFetch = globalThis.fetch;
     const options: LogscopeWinstonTransportOptions = {
       apiKey: 'api-key',
-      endpoint: 'http://localhost:3000',
       source: 'unit-test',
       flushIntervalMs: 1,
       retryPolicy: {
@@ -67,6 +67,7 @@ describe('winston sdk subpath entrypoint', () => {
       await endTransport(transport);
 
       expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock.mock.calls[0]?.[0]).toBe(`${DEFAULT_INGESTION_BASE_URL}/api/logs/ingest`);
       expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(warnSpy.mock.calls[0]?.[0]).toContain('unauthorized');
       expect(warnSpy.mock.calls[0]?.[0]).not.toContain(options.apiKey);

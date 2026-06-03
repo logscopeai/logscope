@@ -22,7 +22,7 @@ const RETRY_EXHAUSTED_WARNING_MESSAGE =
 
 export interface LogscopePinoTransportOptions {
   apiKey: string;
-  endpoint: string;
+  endpoint?: string;
   source: string;
   logFilter?: LogFilterConfig;
   flushIntervalMs?: number;
@@ -127,7 +127,7 @@ export const createPinoTransportInternal = (
   let hasWarnedRetryExhausted = false;
 
   if (!guardedOptions.isValid) {
-    runSafeWarn(dependencies.warn, buildInvalidPinoOptionsWarning(guardedOptions.invalidFields));
+    runSafeWarn(dependencies.warn, buildInvalidPinoOptionsWarning(guardedOptions));
   }
 
   const pipeline = (() => {
