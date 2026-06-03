@@ -60,7 +60,6 @@ export const sendIngestionRequest = async (
   }
 
   try {
-    console.log(`[logscope] Sending logs batch to ${requestUrl}`);
     const response = await dependencies.fetch(requestUrl, buildRequestInit(input));
     const action = classifyIngestionStatus(response.status);
 
