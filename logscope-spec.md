@@ -233,6 +233,8 @@ Responsibilities:
 - Map pino levels to LogLevel
 - Apply filtering
 - Forward to same batching pipeline
+- Accept optional `endpoint` override input, otherwise resolve `LOGSCOPE_INGESTION_URL` and then
+  `https://ingestion.logscopeai.com`
 
 Must not:
 
@@ -254,6 +256,8 @@ Responsibilities:
 - Map default npm winston levels to LogLevel
 - Apply filtering
 - Forward to same batching pipeline
+- Accept optional `endpoint` override input, otherwise resolve `LOGSCOPE_INGESTION_URL` and then
+  `https://ingestion.logscopeai.com`
 
 Must not:
 
