@@ -7,6 +7,7 @@ import {
   type CreateBatchingPipelineInput,
 } from '../pipeline/pipeline';
 import { createPipelineIngress } from '../pipeline/pipeline-ingress';
+import { buildDroppedEntriesWarning } from '../transport/dropped-entries-warning';
 import { sendIngestionRequest } from '../transport/send-ingestion-request';
 import type {
   IngestionRequestResult,
@@ -145,6 +146,14 @@ export const createPinoTransportInternal = (
         flushIntervalMs: guardedOptions.flushIntervalMs,
         retryPolicy: guardedOptions.retryPolicy,
         onBatchResult: (result) => {
+          const droppedEntriesWarning = buildDroppedEntriesWarning(
+            result,
+            '[logscope] Pino transport',
+          );
+          if (droppedEntriesWarning !== undefined) {
+            runSafeWarn(dependencies.warn, droppedEntriesWarning);
+          }
+
           if (!result.shouldWarnUnauthorized || hasWarnedUnauthorized) {
             if (result.errorKind !== 'max_retries_exceeded' || hasWarnedRetryExhausted) {
               return;
