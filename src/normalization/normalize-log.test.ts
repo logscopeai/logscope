@@ -1,5 +1,14 @@
-import { LOG_LEVELS, MAX_MESSAGE_LENGTH, MAX_METADATA_BYTES } from '../constants';
-import { normalizeLog } from './normalize-log';
+import {
+  EMPTY_MESSAGE_PLACEHOLDER,
+  LOG_LEVELS,
+  MAX_MESSAGE_LENGTH,
+  MAX_METADATA_BYTES,
+  MAX_METADATA_KEYS,
+  MAX_REQUEST_ID_LENGTH,
+  MAX_SOURCE_LENGTH,
+  SAFE_FALLBACK_SOURCE,
+} from '../constants';
+import { normalizeLog, normalizeSource } from './normalize-log';
 import { describe, expect, it } from 'vitest';
 
 describe('normalizeLog', () => {
@@ -247,5 +256,82 @@ describe('normalizeLog', () => {
     });
 
     expect(normalizedLog).not.toHaveProperty('metadata');
+  });
+
+  describe('ingest contract limits', () => {
+    const base = { source: 'orders-api', level: 'info' as const, message: 'ok' };
+
+    it('trims source and falls back to the safe source below the 2-character minimum', () => {
+      expect(normalizeSource('  orders-api  ')).toBe('orders-api');
+      expect(normalizeSource(' a ')).toBe(SAFE_FALLBACK_SOURCE);
+      expect(normalizeSource('   ')).toBe(SAFE_FALLBACK_SOURCE);
+      expect(normalizeSource(undefined)).toBe(SAFE_FALLBACK_SOURCE);
+      expect(normalizeLog({ ...base, source: ' a ' }).source).toBe(SAFE_FALLBACK_SOURCE);
+    });
+
+    it('truncates source to the 100-character maximum', () => {
+      const longSource = 's'.repeat(MAX_SOURCE_LENGTH + 20);
+
+      expect(normalizeSource(longSource)).toBe('s'.repeat(MAX_SOURCE_LENGTH));
+      expect(normalizeLog({ ...base, source: longSource }).source).toHaveLength(MAX_SOURCE_LENGTH);
+    });
+
+    it('trims messages and substitutes a placeholder when nothing is left', () => {
+      expect(normalizeLog({ ...base, message: '  padded  ' }).message).toBe('padded');
+      expect(normalizeLog({ ...base, message: '' }).message).toBe(EMPTY_MESSAGE_PLACEHOLDER);
+      expect(normalizeLog({ ...base, message: '   ' }).message).toBe(EMPTY_MESSAGE_PLACEHOLDER);
+      expect(
+        normalizeLog({ ...base, message: '' as unknown as string, metadata: { keep: 1 } }),
+      ).toMatchObject({
+        message: EMPTY_MESSAGE_PLACEHOLDER,
+        metadata: { keep: 1 },
+      });
+    });
+
+    it('keeps a message at exactly the maximum after trimming', () => {
+      const message = `  ${'m'.repeat(MAX_MESSAGE_LENGTH)}  `;
+
+      expect(normalizeLog({ ...base, message }).message).toBe('m'.repeat(MAX_MESSAGE_LENGTH));
+    });
+
+    it('keeps the first 50 metadata keys instead of dropping the whole object', () => {
+      const metadata = Object.fromEntries(
+        Array.from({ length: MAX_METADATA_KEYS + 5 }, (_, index) => [`k${index}`, index]),
+      );
+
+      const normalizedLog = normalizeLog({ ...base, metadata });
+
+      expect(Object.keys(normalizedLog.metadata ?? {})).toEqual(
+        Array.from({ length: MAX_METADATA_KEYS }, (_, index) => `k${index}`),
+      );
+    });
+
+    it('trims, drops and truncates metadata.requestId like the API does', () => {
+      expect(
+        normalizeLog({ ...base, metadata: { requestId: '  req-1  ', a: 1 } }).metadata,
+      ).toEqual({
+        requestId: 'req-1',
+        a: 1,
+      });
+      expect(normalizeLog({ ...base, metadata: { requestId: '   ', a: 1 } }).metadata).toEqual({
+        a: 1,
+      });
+      expect(
+        normalizeLog({ ...base, metadata: { requestId: 'r'.repeat(MAX_REQUEST_ID_LENGTH + 40) } })
+          .metadata?.requestId,
+      ).toBe('r'.repeat(MAX_REQUEST_ID_LENGTH));
+      expect(normalizeLog({ ...base, metadata: { requestId: 42 } }).metadata).toEqual({
+        requestId: 42,
+      });
+    });
+
+    it('still drops metadata that exceeds the byte limit after the key cap', () => {
+      const normalizedLog = normalizeLog({
+        ...base,
+        metadata: { blob: 'x'.repeat(MAX_METADATA_BYTES) },
+      });
+
+      expect(normalizedLog.metadata).toBeUndefined();
+    });
   });
 });

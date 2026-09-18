@@ -1,4 +1,15 @@
-import { MAX_MESSAGE_LENGTH, MAX_METADATA_BYTES, METADATA_PRIMITIVE_VALUE_KEY } from '../constants';
+import {
+  EMPTY_MESSAGE_PLACEHOLDER,
+  MAX_MESSAGE_LENGTH,
+  MAX_METADATA_BYTES,
+  MAX_METADATA_KEYS,
+  MAX_REQUEST_ID_LENGTH,
+  MAX_SOURCE_LENGTH,
+  METADATA_PRIMITIVE_VALUE_KEY,
+  METADATA_REQUEST_ID_KEY,
+  MIN_SOURCE_LENGTH,
+  SAFE_FALLBACK_SOURCE,
+} from '../constants';
 import type { IngestionLogEntry, JsonSafeObject, JsonSafeValue, LogLevel } from '../types';
 
 export interface NormalizeLogInput {
@@ -101,8 +112,31 @@ const normalizeMetadata = (metadata: unknown): JsonSafeObject | undefined => {
   }
 };
 
+/**
+ * The API validates `source` as a trimmed string of 2..100 characters. Anything shorter falls back
+ * to the same safe source the root client uses; anything longer is truncated.
+ */
+export const normalizeSource = (source: unknown): string => {
+  const trimmedSource = typeof source === 'string' ? source.trim() : '';
+
+  if (trimmedSource.length < MIN_SOURCE_LENGTH) {
+    return SAFE_FALLBACK_SOURCE;
+  }
+
+  if (trimmedSource.length > MAX_SOURCE_LENGTH) {
+    return trimmedSource.slice(0, MAX_SOURCE_LENGTH);
+  }
+
+  return trimmedSource;
+};
+
+/**
+ * The API rejects a message that is empty after trimming. A pino record without `msg` or an
+ * explicit `logger.info('')` still carries a level, a timestamp and metadata worth keeping, so the
+ * entry is sent with a placeholder instead of being dropped (or, worse, sinking the whole batch).
+ */
 const normalizeMessage = (message: unknown): string => {
-  const normalizedMessage = (() => {
+  const serializedMessage = (() => {
     if (typeof message === 'string') {
       return message;
     }
@@ -118,11 +152,57 @@ const normalizeMessage = (message: unknown): string => {
     }
   })();
 
-  if (normalizedMessage.length <= MAX_MESSAGE_LENGTH) {
-    return normalizedMessage;
+  const trimmedMessage = serializedMessage.trim();
+
+  if (trimmedMessage.length === 0) {
+    return EMPTY_MESSAGE_PLACEHOLDER;
   }
 
-  return normalizedMessage.slice(0, MAX_MESSAGE_LENGTH);
+  if (trimmedMessage.length <= MAX_MESSAGE_LENGTH) {
+    return trimmedMessage;
+  }
+
+  // Truncation can expose trailing whitespace again; the API trims before measuring, so trim once more.
+  return trimmedMessage.slice(0, MAX_MESSAGE_LENGTH).trimEnd() || EMPTY_MESSAGE_PLACEHOLDER;
+};
+
+const capMetadataKeys = (metadata: JsonSafeObject): JsonSafeObject => {
+  const keys = Object.keys(metadata);
+
+  if (keys.length <= MAX_METADATA_KEYS) {
+    return metadata;
+  }
+
+  // Keep the first keys in insertion order so the outcome is deterministic for a given object.
+  const cappedMetadata: JsonSafeObject = {};
+
+  for (const key of keys.slice(0, MAX_METADATA_KEYS)) {
+    cappedMetadata[key] = metadata[key] as JsonSafeValue;
+  }
+
+  return cappedMetadata;
+};
+
+// Mirrors the API rule: trimmed, dropped when empty, never longer than the log-index column.
+const normalizeRequestId = (metadata: JsonSafeObject): JsonSafeObject => {
+  const requestId = metadata[METADATA_REQUEST_ID_KEY];
+
+  if (typeof requestId !== 'string') {
+    return metadata;
+  }
+
+  const trimmedRequestId = requestId.trim().slice(0, MAX_REQUEST_ID_LENGTH);
+
+  if (trimmedRequestId.length === 0) {
+    const { [METADATA_REQUEST_ID_KEY]: _dropped, ...rest } = metadata;
+    return rest;
+  }
+
+  if (trimmedRequestId === requestId) {
+    return metadata;
+  }
+
+  return { ...metadata, [METADATA_REQUEST_ID_KEY]: trimmedRequestId };
 };
 
 const enforceMetadataLimit = (metadata: JsonSafeObject | undefined): JsonSafeObject | undefined => {
@@ -131,7 +211,8 @@ const enforceMetadataLimit = (metadata: JsonSafeObject | undefined): JsonSafeObj
   }
 
   try {
-    const serializedMetadata = JSON.stringify(metadata);
+    const boundedMetadata = normalizeRequestId(capMetadataKeys(metadata));
+    const serializedMetadata = JSON.stringify(boundedMetadata);
 
     if (serializedMetadata === undefined) {
       return undefined;
@@ -141,7 +222,7 @@ const enforceMetadataLimit = (metadata: JsonSafeObject | undefined): JsonSafeObj
       return undefined;
     }
 
-    return metadata;
+    return boundedMetadata;
   } catch {
     return undefined;
   }
@@ -173,7 +254,7 @@ export const normalizeLog = (
   const metadata = enforceMetadataLimit(normalizeMetadata(input.metadata));
 
   const normalizedLog: IngestionLogEntry = {
-    source: input.source,
+    source: normalizeSource(input.source),
     level: input.level,
     timestamp: toIsoTimestamp(input.timestamp, now),
     message: normalizeMessage(input.message),
