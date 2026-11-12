@@ -706,6 +706,44 @@ describe('createLogscopeClientInternal', () => {
     expect(warn.mock.calls[0]?.[0]).not.toContain(baseConfig.apiKey);
   });
 
+  it('warns for every batch that lost entries to API validation and names the fields', () => {
+    const createPipeline = vi.fn((input: PipelineInput) => {
+      return {
+        enqueue: vi.fn(() => {
+          input.onBatchResult({
+            action: 'success',
+            status: 202,
+            shouldWarnUnauthorized: false,
+            droppedEntries: {
+              count: 1,
+              indexes: [3],
+              details: ['"logs.3.message" Too small: expected string to have >=1 characters'],
+            },
+          });
+        }),
+        flushNow: vi.fn().mockResolvedValue(undefined),
+        stop: vi.fn().mockResolvedValue(undefined),
+      };
+    });
+    const warn = vi.fn();
+
+    const client = createLogscopeClientInternal(baseConfig, {
+      createPipeline,
+      warn,
+      now: () => fixedDate,
+    });
+
+    client.info('partial drop #1');
+    client.info('partial drop #2');
+
+    expect(warn).toHaveBeenCalledTimes(2);
+    expect(warn.mock.calls[0]?.[0]).toContain('[logscope] Dropped 1 log entry');
+    expect(warn.mock.calls[0]?.[0]).toContain('batch positions 3');
+    expect(warn.mock.calls[0]?.[0]).toContain('"logs.3.message"');
+    expect(warn.mock.calls[0]?.[0]).toContain('the rest of the batch was delivered');
+    expect(warn.mock.calls[0]?.[0]).not.toContain(baseConfig.apiKey);
+  });
+
   it('fails safely when ingestionBaseUrl uses an untrusted domain', () => {
     const createPipeline = vi.fn(() => {
       return {
