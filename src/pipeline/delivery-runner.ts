@@ -1,6 +1,7 @@
 import { calculateRetryDelayMs } from '../retry/backoff';
 import { resolveRetryPolicy, type RetryPolicy } from '../retry/retry-policy';
 import type {
+  DroppedEntriesSummary,
   IngestionRequestResult,
   SendIngestionRequestInput,
 } from '../transport/transport-types';
@@ -29,6 +30,13 @@ const safeRetryResult = (): IngestionRequestResult => {
   };
 };
 
+const withDroppedEntries = (
+  result: IngestionRequestResult,
+  droppedEntries: DroppedEntriesSummary | undefined,
+): IngestionRequestResult => {
+  return droppedEntries === undefined ? result : { ...result, droppedEntries };
+};
+
 export const runBatchDelivery = async (
   input: DeliveryRunnerInput,
 ): Promise<IngestionRequestResult> => {
@@ -36,6 +44,8 @@ export const runBatchDelivery = async (
   const waitForRetry = input.waitForRetry ?? waitForDelay;
 
   let retriesPerformed = 0;
+  let logs: IngestionLogEntry[] = input.logs;
+  let droppedEntries: DroppedEntriesSummary | undefined;
 
   while (true) {
     const result = await (async (): Promise<IngestionRequestResult> => {
@@ -43,27 +53,55 @@ export const runBatchDelivery = async (
         return await input.sendBatch({
           endpoint: input.endpoint,
           apiKey: input.apiKey,
-          logs: input.logs,
+          logs,
         });
       } catch {
         return safeRetryResult();
       }
     })();
 
+    if (result.action === 'drop_entries') {
+      // The API named the rejected entries: resend the rest once. A second validation failure on
+      // the remaining entries means the batch is not salvageable this way.
+      if (droppedEntries !== undefined) {
+        return withDroppedEntries(
+          {
+            action: 'drop',
+            status: 400,
+            shouldWarnUnauthorized: false,
+            errorKind: 'repeated_validation_failure',
+          },
+          droppedEntries,
+        );
+      }
+
+      const invalidIndexes = new Set(result.invalidIndexes);
+      droppedEntries = {
+        count: invalidIndexes.size,
+        indexes: result.invalidIndexes,
+        details: result.details,
+      };
+      logs = logs.filter((_, index) => !invalidIndexes.has(index));
+      continue;
+    }
+
     if (
       result.action === 'success' ||
       result.action === 'drop' ||
       result.action === 'unauthorized'
     ) {
-      return result;
+      return withDroppedEntries(result, droppedEntries);
     }
 
     if (retriesPerformed >= retryPolicy.maxRetries) {
-      return {
-        action: 'drop',
-        shouldWarnUnauthorized: false,
-        errorKind: 'max_retries_exceeded',
-      };
+      return withDroppedEntries(
+        {
+          action: 'drop',
+          shouldWarnUnauthorized: false,
+          errorKind: 'max_retries_exceeded',
+        },
+        droppedEntries,
+      );
     }
 
     const retryAttempt = retriesPerformed + 1;
@@ -72,11 +110,14 @@ export const runBatchDelivery = async (
     try {
       await waitForRetry(retryDelayMs);
     } catch {
-      return {
-        action: 'drop',
-        shouldWarnUnauthorized: false,
-        errorKind: 'max_retries_exceeded',
-      };
+      return withDroppedEntries(
+        {
+          action: 'drop',
+          shouldWarnUnauthorized: false,
+          errorKind: 'max_retries_exceeded',
+        },
+        droppedEntries,
+      );
     }
 
     retriesPerformed += 1;
