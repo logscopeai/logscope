@@ -6,6 +6,7 @@ import {
 } from '../config/config-guards';
 import { createBatchingPipeline, type BatchingPipeline } from '../pipeline/pipeline';
 import { createPipelineIngress } from '../pipeline/pipeline-ingress';
+import { buildDroppedEntriesWarning } from '../transport/dropped-entries-warning';
 import { sendIngestionRequest } from '../transport/send-ingestion-request';
 import type {
   IngestionRequestResult,
@@ -100,6 +101,11 @@ export const createLogscopeClientInternal = (
         apiKey: guardedConfig.apiKey,
         runtimeConfig: guardedConfig.runtimeConfig,
         onBatchResult: (result) => {
+          const droppedEntriesWarning = buildDroppedEntriesWarning(result, '[logscope]');
+          if (droppedEntriesWarning !== undefined) {
+            runSafeWarn(dependencies.warn, droppedEntriesWarning);
+          }
+
           if (!result.shouldWarnUnauthorized || hasWarnedUnauthorized) {
             if (result.errorKind !== 'max_retries_exceeded' || hasWarnedRetryExhausted) {
               return;
