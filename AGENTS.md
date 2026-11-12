@@ -48,17 +48,15 @@ The authoritative behavioral reference is `logscope-spec.md`.
 
 7. **Unit test coverage must remain > 90%.**
 
-8. **No git commit or push without explicit request.**
+8. **All docs, tickets, comments, and UI copy in English.**
 
-9. **All docs, tickets, comments, and UI copy in English.**
+9. **When requested to perform a git commit make sure to follow the instructions provided in the file `.github/commit-message-instructions.md`**
 
-10. **When requested to perform a git commit make sure to follow the instructions provided in the file `.github/commit-message-instructions.md`**
+10. **Prefer one PR per feature, even if multiple tickets are required to complete that feature.**
 
-11. **Prefer one PR per feature, even if multiple tickets are required to complete that feature.**
+11. **For substantial work handoffs, explicitly state whether the root workspace docs were reviewed and whether updates were made or were not needed.**
 
-12. **For substantial work handoffs, explicitly state whether the root workspace docs were reviewed and whether updates were made or were not needed.**
-
-13. **Use the `logscopeDev` GitHub identity for this SDK.** Follow the checks below before committing, pushing, or creating PRs.
+12. **Use the `logscopeDev` GitHub identity for this SDK.** Follow the checks below before committing, pushing, or creating PRs.
 
 ### GitHub Identity
 
