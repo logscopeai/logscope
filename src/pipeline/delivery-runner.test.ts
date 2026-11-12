@@ -159,4 +159,87 @@ describe('runBatchDelivery', () => {
       errorKind: 'max_retries_exceeded',
     });
   });
+
+  describe('partial validation failures', () => {
+    const buildBatch = (size: number) =>
+      Array.from({ length: size }, (_, index) => ({
+        source: 'orders-api',
+        level: 'info' as const,
+        timestamp: '2026-02-15T00:00:00.000Z',
+        message: `entry ${index}`,
+      }));
+
+    it('drops only the entries named by the API and resends the rest once', async () => {
+      const details = ['"logs.1.message" Too small: expected string to have >=1 characters'];
+      const sendBatch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          action: 'drop_entries',
+          status: 400,
+          shouldWarnUnauthorized: false,
+          invalidIndexes: [1],
+          details,
+        })
+        .mockResolvedValueOnce(createResult('success', 202));
+      const logs = buildBatch(3);
+
+      const result = await runBatchDelivery({ ...buildInput(), logs, sendBatch });
+
+      expect(sendBatch).toHaveBeenCalledTimes(2);
+      expect(sendBatch.mock.calls[1]?.[0].logs).toEqual([logs[0], logs[2]]);
+      expect(result).toEqual({
+        action: 'success',
+        status: 202,
+        shouldWarnUnauthorized: false,
+        droppedEntries: { count: 1, indexes: [1], details },
+      });
+    });
+
+    it('does not count the resend against the retry budget', async () => {
+      const sendBatch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          action: 'drop_entries',
+          status: 400,
+          shouldWarnUnauthorized: false,
+          invalidIndexes: [0],
+          details: ['"logs.0.message" Too small'],
+        })
+        .mockResolvedValueOnce(createResult('retry', 503))
+        .mockResolvedValueOnce(createResult('success', 202));
+
+      const result = await runBatchDelivery({
+        ...buildInput(),
+        logs: buildBatch(2),
+        sendBatch,
+        retryPolicy: { maxRetries: 1 },
+        waitForRetry: async () => {},
+      });
+
+      expect(sendBatch).toHaveBeenCalledTimes(3);
+      expect(result.action).toBe('success');
+      expect(result.droppedEntries?.count).toBe(1);
+    });
+
+    it('drops the batch when the resend is rejected again', async () => {
+      const sendBatch = vi.fn().mockResolvedValue({
+        action: 'drop_entries',
+        status: 400,
+        shouldWarnUnauthorized: false,
+        invalidIndexes: [0],
+        details: ['"logs.0.message" Too small'],
+      });
+
+      const result = await runBatchDelivery({ ...buildInput(), logs: buildBatch(3), sendBatch });
+
+      expect(sendBatch).toHaveBeenCalledTimes(2);
+      expect(result).toEqual({
+        action: 'drop',
+        status: 400,
+        shouldWarnUnauthorized: false,
+        errorKind: 'repeated_validation_failure',
+        droppedEntries: { count: 1, indexes: [0], details: ['"logs.0.message" Too small'] },
+      });
+    });
+  });
 });

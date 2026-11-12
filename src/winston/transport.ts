@@ -10,6 +10,7 @@ import {
   type CreateBatchingPipelineInput,
 } from '../pipeline/pipeline';
 import { createPipelineIngress } from '../pipeline/pipeline-ingress';
+import { buildDroppedEntriesWarning } from '../transport/dropped-entries-warning';
 import { sendIngestionRequest } from '../transport/send-ingestion-request';
 import type {
   IngestionRequestResult,
@@ -152,6 +153,14 @@ class LogscopeWinstonTransportStream extends TransportStream {
           flushIntervalMs: guardedOptions.flushIntervalMs,
           retryPolicy: guardedOptions.retryPolicy,
           onBatchResult: (result) => {
+            const droppedEntriesWarning = buildDroppedEntriesWarning(
+              result,
+              '[logscope] Winston transport',
+            );
+            if (droppedEntriesWarning !== undefined) {
+              runSafeWarn(dependencies.warn, droppedEntriesWarning);
+            }
+
             if (!result.shouldWarnUnauthorized || hasWarnedUnauthorized) {
               if (result.errorKind !== 'max_retries_exceeded' || hasWarnedRetryExhausted) {
                 return;
