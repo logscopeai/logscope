@@ -58,6 +58,36 @@ The authoritative behavioral reference is `logscope-spec.md`.
 
 12. **For substantial work handoffs, explicitly state whether the root workspace docs were reviewed and whether updates were made or were not needed.**
 
+13. **Use the `logscopeDev` GitHub identity for this SDK.** Follow the checks below before committing, pushing, or creating PRs.
+
+### GitHub Identity
+
+This SDK belongs to `logscopeai/logscope`. Use `logscopeDev` for pushes, PRs, and other GitHub write operations; do not use the personal account `rodolfoBocanegra`.
+
+Before a GitHub CLI write operation, select and verify the account:
+
+```bash
+gh auth switch --hostname github.com --user logscopeDev
+gh api user --jq .login
+```
+
+The returned login must be `logscopeDev`. If switching or verification fails, stop the operation and report the issue. Browser sessions and GitHub connectors have separate authentication; verify their acting account too. An SSH identity does not select the account used to create PRs.
+
+Before an authorized commit, configure the repository-local author and verify both effective identities:
+
+```bash
+git config --local user.name "Logscope Dev"
+git config --local user.email "dev@logscopeai.com"
+git var GIT_AUTHOR_IDENT
+git var GIT_COMMITTER_IDENT
+```
+
+Both identities must use `Logscope Dev <dev@logscopeai.com>`; resolve any environment overrides before committing.
+
+Before pushing, verify `git remote get-url --push origin` returns `git@github-logscope:logscopeai/logscope.git`. The local SSH alias `github-logscope` must authenticate as `logscopeDev` (`ssh -T git@github-logscope` prints `Hi logscopeDev!` and normally exits with status 1). Push SDK branches explicitly to `origin`; keep `personal-fork` as a reference, not a publication target.
+
+Preserve the personal account's credentials, SSH keys, and global Git identity. `gh auth switch` changes the active account for all of `github.com`; restore the previously active CLI account when finished. To return to the personal account, use `gh auth switch --hostname github.com --user rodolfoBocanegra`.
+
 ### Agent Commit and PR Rules
 
 When an AI agent is asked to implement a phase or feature, it must create multiple focused commits instead of one milestone-sized commit whenever the work includes more than one layer or concern.
