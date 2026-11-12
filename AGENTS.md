@@ -48,25 +48,24 @@ The authoritative behavioral reference is `logscope-spec.md`.
 
 7. **Unit test coverage must remain > 90%.**
 
-8. **No git commit or push without explicit request.**
+8. **All docs, tickets, comments, and UI copy in English.**
 
-9. **All docs, tickets, comments, and UI copy in English.**
+9. **When requested to perform a git commit make sure to follow the instructions provided in the file `.github/commit-message-instructions.md`**
 
-10. **When requested to perform a git commit make sure to follow the instructions provided in the file `.github/commit-message-instructions.md`**
+10. **Prefer one PR per feature, even if multiple tickets are required to complete that feature.**
 
-11. **Prefer one PR per feature, even if multiple tickets are required to complete that feature.**
+11. **For substantial work handoffs, explicitly state whether the root workspace docs were reviewed and whether updates were made or were not needed.**
 
-12. **For substantial work handoffs, explicitly state whether the root workspace docs were reviewed and whether updates were made or were not needed.**
-
-13. **Use the `logscopeDev` GitHub identity for this SDK.** Follow the checks below before committing, pushing, or creating PRs.
+12. **Use the `logscopeDev` GitHub identity for this SDK.** Follow the checks below before committing, pushing, or creating PRs.
 
 ### GitHub Identity
 
-This SDK belongs to `logscopeai/logscope`. Use `logscopeDev` for pushes, PRs, and other GitHub write operations; do not use the personal account `rodolfoBocanegra`.
+This SDK belongs to `logscopeai/logscope`. Use `logscopeDev` for pushes, PRs, and other GitHub write operations.
 
-Before a GitHub CLI write operation, select and verify the account:
+Before a GitHub CLI write operation, record the active account, then select and verify the SDK account:
 
 ```bash
+previous_account=$(gh api user --jq .login)
 gh auth switch --hostname github.com --user logscopeDev
 gh api user --jq .login
 ```
@@ -86,7 +85,11 @@ Both identities must use `Logscope Dev <dev@logscopeai.com>`; resolve any enviro
 
 Before pushing, verify `git remote get-url --push origin` returns `git@github-logscope:logscopeai/logscope.git`. The local SSH alias `github-logscope` must authenticate as `logscopeDev` (`ssh -T git@github-logscope` prints `Hi logscopeDev!` and normally exits with status 1). Push SDK branches explicitly to `origin`; keep `personal-fork` as a reference, not a publication target.
 
-Preserve the personal account's credentials, SSH keys, and global Git identity. `gh auth switch` changes the active account for all of `github.com`; restore the previously active CLI account when finished. To return to the personal account, use `gh auth switch --hostname github.com --user rodolfoBocanegra`.
+Preserve other accounts' credentials, SSH keys, and global Git identity. `gh auth switch` changes the active account for all of `github.com`. Retain the captured `previous_account` login across tool calls and restore it when finished:
+
+```bash
+gh auth switch --hostname github.com --user "$previous_account"
+```
 
 ### Agent Commit and PR Rules
 
