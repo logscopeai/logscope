@@ -159,10 +159,18 @@ Runtime guards are applied before delivery:
 - Invalid endpoint overrides do not silently reroute to production.
 - The SDK does not expose a client-owned `environment` routing field.
 
-Normalization enforces ingestion constraints:
+Normalization enforces the ingestion constraints before an entry is queued, so a single bad
+entry cannot cost the whole batch a `400`:
 
-- `message` is deterministically truncated to `<= 2048` characters.
-- `metadata` is normalized to JSON-safe content and dropped if serialized size is `> 2048` bytes.
+| Field                | Ingestion rule                               | SDK normalization                                                                                                        |
+| -------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `source`             | trimmed, `2..100` characters                 | trimmed; shorter than `2` falls back to `unknown`; longer than `100` is truncated                                        |
+| `message`            | trimmed, `1..2048` characters                | trimmed and truncated to `2048`; empty after trimming becomes `[empty message]` so the entry and its metadata still ship |
+| `metadata`           | `<= 50` top-level keys, `<= 2048` JSON bytes | first `50` keys kept (insertion order); dropped entirely if still `> 2048` bytes                                         |
+| `metadata.requestId` | trimmed, `<= 160` characters                 | trimmed, removed when empty, truncated to `160`                                                                          |
+| batch                | `1..50` entries                              | `maxBatchSize` is capped at `50`                                                                                         |
+
+Lengths are counted in UTF-16 code units (JavaScript `string.length`), the same unit the API uses.
 
 Fail-safe expectations:
 
@@ -171,6 +179,9 @@ Fail-safe expectations:
 - `401` results warn once.
 - `429` and `500` results retry with backoff.
 - Batches are dropped after max retries are exhausted.
+- A `400` whose `details` name specific entries (`"logs.<index>.<field>" …`) drops only those
+  entries, resends the rest once, and warns with the positions and the first details. A `400`
+  that is not attributable to entries, or a second `400` on the resend, drops the batch.
 
 ## Public Types And Utilities
 
@@ -307,7 +318,8 @@ x-api-key: <LOGSCOPE_API_KEY>
 Response handling:
 
 - `202` -> success
-- `400` / `413` -> drop batch
+- `400` with entry-scoped `details` -> drop the named entries, resend the rest once, warn
+- `400` (otherwise) / `413` -> drop batch
 - `401` -> unauthorized warning path
 - `429` / `500` -> retry with backoff
 - retriable batches are dropped after max retries

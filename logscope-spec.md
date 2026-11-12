@@ -119,10 +119,12 @@ interface IngestionLogEntry {
 }
 ```
 
-Constraints:
+Constraints (mirroring the ingestion compatibility contract):
 
-- message length <= 2048
-- metadata JSON size <= 2048 bytes
+- `source`: trimmed, length 2..100; shorter falls back to `unknown`, longer is truncated
+- `message`: trimmed, length 1..2048; empty after trimming becomes `[empty message]`
+- `metadata`: JSON-safe, at most 50 top-level keys (first 50 kept), JSON size <= 2048 bytes
+- `metadata.requestId`: trimmed, removed when empty, truncated to 160 characters
 - max 50 logs per batch
 - minimum 1 log per request
 - `source` remains required in emitted ingestion entries; root-client logs use the deterministic fallback `unknown`
@@ -169,7 +171,8 @@ Accepted response:
 SDK behavior:
 
 - On 202 → success
-- On 400 → drop batch
+- On 400 with entry-scoped `details` (`"logs.<index>.<field>" …`) → drop those entries, resend the rest once, emit warning
+- On 400 otherwise (or a second 400 on the resend) → drop batch
 - On 401 → emit warning (once)
 - On 413 → drop batch
 - On 429 → retry with backoff

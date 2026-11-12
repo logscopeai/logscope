@@ -94,8 +94,11 @@ The stable `1.0` fail-safe contract includes:
 - filtering occurs before batching for manual, console, pino, and winston inputs;
 - logs are normalized to the ingestion schema before delivery;
 - batch size remains bounded by the ingestion contract maximum of `50`;
-- message truncation remains bounded to `2048` characters;
-- metadata remains JSON-safe and is dropped when normalized payload size exceeds `2048` bytes;
+- `source` is trimmed and bounded to `2..100` characters (fallback `unknown`, truncation);
+- message is trimmed and truncation remains bounded to `2048` characters; an empty message is
+  replaced by the `[empty message]` placeholder instead of being sent;
+- metadata remains JSON-safe, keeps at most `50` top-level keys, and is dropped when normalized
+  payload size exceeds `2048` bytes; `metadata.requestId` is trimmed and bounded to `160`;
 - invalid required configuration falls back safely instead of hard failing into caller code;
 - invalid root-client endpoint overrides warn and switch the client into no-op behavior instead of
   silently rerouting to another host.
@@ -105,7 +108,9 @@ Delivery classification that is compatibility-sensitive:
 - `POST /api/logs/ingest` remains the ingestion path used by the SDK;
 - `x-api-key` remains the authentication header used by the SDK;
 - `202` is treated as success;
-- `400` and `413` cause the batch to be dropped;
+- `400` with entry-scoped `details` drops only the named entries and resends the rest once (with
+  a warning); any other `400`, a second `400` on the resend, and `413` cause the batch to be
+  dropped;
 - `401` triggers the unauthorized warning path;
 - `429` and `500` trigger retry with backoff;
 - batches are dropped after max retries are exhausted.
