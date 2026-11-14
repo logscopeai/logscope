@@ -337,12 +337,19 @@ Response handling:
 Run the standard verification flow from a clean checkout:
 
 ```bash
+nvm use # Node 26.8.2; use npm 11.19.1 for tooling
 npm ci
+npm run format:check
+npm run test:release
 npm test
 npm run build
+npm run verify:package
 ```
 
 Unit tests are co-located with the files they validate and coverage is enforced through Vitest.
+The published SDK supports Node >=20. Source manifests use `0.0.0-development`; CI stamps
+stable release versions. See [contributor guidance](CONTRIBUTING.md) and the
+[release runbook](docs/release-verification.md) for squash metadata and publishing prerequisites.
 
 ## Additional Documentation
 
