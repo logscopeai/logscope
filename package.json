@@ -35,7 +35,8 @@
     "format:check": "prettier --config .prettierrc --check .",
     "test:release": "node --test scripts/*.test.mjs",
     "release:analyze": "node scripts/analyze-release.mjs",
-    "release": "semantic-release"
+    "release": "semantic-release",
+    "check:pr-title": "node scripts/check-pr-title.mjs"
   },
   "repository": {
     "type": "git",
