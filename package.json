@@ -25,7 +25,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "test": "vitest run --coverage",
     "test:coverage": "vitest run --coverage",
@@ -36,7 +36,8 @@
     "test:release": "node --test scripts/*.test.mjs",
     "release:analyze": "node scripts/analyze-release.mjs",
     "release": "semantic-release",
-    "check:pr-title": "node scripts/check-pr-title.mjs"
+    "check:pr-title": "node scripts/check-pr-title.mjs",
+    "verify:package": "node scripts/verify-package.mjs"
   },
   "repository": {
     "type": "git",
