@@ -172,3 +172,11 @@ Unless explicitly stated otherwise:
 - Tone: **professional and neutral**
 - Scope is required when multiple layers exist
 - No breaking-change footer unless a breaking change is introduced
+
+## Pull Request Metadata
+
+For PRs targeting `main`, the squash commit uses the PR title as subject and its description as
+body. The same type/scope rules apply; put Jira references in the summary, for example
+`fix(transport): LS-123 handle retries`. Breaking PRs require both a title `!` and a
+`BREAKING CHANGE: <consumer migration>` footer. Title/body edits rerun validation.
+See [contributor guidance](../CONTRIBUTING.md) and the [release runbook](../docs/release-verification.md).
