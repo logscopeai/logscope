@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sdk-stable-release
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    uses: ./.github/workflows/checks.yml
+
+  release:
+    name: Publish stable SDK
+    needs: checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'logscopeai/logscope'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout the verified commit and full release history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # Omit registry-url: a token placeholder in .npmrc interferes with OIDC.
+      - name: Set up release tooling
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Select and verify npm
+        run: |
+          npm install --global npm@11.19.1
+          test "$(node --version)" = "v26.8.2"
+          test "$(npm --version)" = "11.19.1"
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Build
+        run: npm run build
+      - name: Publish qualifying changes through OIDC
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run release

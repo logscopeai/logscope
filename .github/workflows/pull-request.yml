@@ -1,0 +1,36 @@
+name: Pull request
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  metadata:
+    name: PR release metadata
+    if: github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up release tooling
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Select npm
+        run: npm install --global npm@11.19.1
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Validate the eventual squash commit
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: npm run check:pr-title
+
+  checks:
+    uses: ./.github/workflows/checks.yml
